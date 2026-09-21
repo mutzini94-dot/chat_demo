@@ -235,6 +235,56 @@ body.modon .msg:hover .modbtns{display:flex}
 .popout .popbody .chat{height:100%!important;flex:1;border:none;border-radius:0;box-shadow:none;min-height:0}
 .popout.min{height:auto!important;min-height:0;resize:none}
 .popout.min .popbody{display:none}
+
+/* clickable nick + message tools + report */
+.msg .nk{cursor:pointer}
+.msg .nk:hover{text-decoration:underline}
+.tools{display:none;position:absolute;right:6px;top:2px;gap:4px}
+.msg:hover .tools{display:flex}
+.tools button{font-size:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);border-radius:6px;padding:2px 7px}
+.tools button:hover{border-color:var(--crit);color:var(--crit)}
+.tools .rp{padding:2px 6px}
+.tools .mo{display:none}
+body.modon .tools .mo{display:inline-block}
+.sys.jhide{display:none}
+
+/* modal + profile card + report */
+.modal[hidden]{display:none!important}
+.modal{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px}
+.mback{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.mpanel{position:relative;width:min(324px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,.5);overflow:hidden}
+.pf-top{display:flex;align-items:flex-start;gap:11px;padding:16px;border-bottom:1px solid var(--line-2)}
+.pf-av{width:44px;height:44px;border-radius:12px;flex:0 0 auto}
+.pf-nick{font-weight:700;font-size:15px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;line-height:1.3}
+.pf-nick .bdg{font-size:9px;font-family:"IBM Plex Mono",monospace;font-weight:600;padding:1px 5px;border-radius:5px;color:#fff}
+.pf-grade{font-size:12px;color:var(--ink-2);margin-top:3px}
+.pf-x{margin-left:auto;background:none;border:none;color:var(--ink-3);font-size:15px;cursor:pointer;flex:0 0 auto}
+.pf-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line-2)}
+.pf-stats>div{background:var(--panel);padding:11px 14px;display:flex;flex-direction:column;gap:2px}
+.pf-stats b{font-size:15px;font-family:"IBM Plex Mono",monospace}
+.pf-stats span{font-size:11px;color:var(--ink-3)}
+.pf-acts{display:flex;flex-wrap:wrap;gap:7px;padding:14px;border-top:1px solid var(--line-2)}
+.pf-acts button{flex:1 1 40%;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:var(--panel-2);
+  color:var(--ink);border-radius:9px;padding:8px 10px;cursor:pointer}
+.pf-acts button.primary{background:var(--accent);color:#fff;border-color:var(--accent);flex-basis:100%}
+.pf-acts button.rep{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 30%,var(--line))}
+.pf-acts button.mod{color:var(--mgr);border-color:color-mix(in srgb,var(--mgr) 30%,var(--line))}
+.rp-wrap{padding:16px}
+.rp-wrap h4{margin:0 0 4px;font-size:15px}
+.rp-wrap .tgt{font-size:12px;color:var(--ink-3);margin:0 0 12px;word-break:break-word}
+.rp-reasons{display:flex;flex-direction:column;gap:8px}
+.rp-reasons label{display:flex;align-items:center;gap:9px;font-size:13px;border:1px solid var(--line);
+  border-radius:9px;padding:9px 11px;cursor:pointer}
+.rp-reasons input{accent-color:var(--accent)}
+.rp-btns{display:flex;gap:8px;margin-top:14px}
+.rp-btns button{flex:1;font-size:13px;font-weight:600;border-radius:9px;padding:9px;border:1px solid var(--line);
+  background:var(--panel-2);color:var(--ink);cursor:pointer}
+.rp-btns .submit{background:var(--crit);color:#fff;border-color:var(--crit)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(8px);z-index:400;
+  background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;padding:10px 16px;border-radius:22px;
+  box-shadow:var(--shadow-lg);opacity:0;transition:.2s;pointer-events:none;max-width:calc(100vw - 32px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 
 <div class="wrap">
@@ -261,6 +311,7 @@ body.modon .msg:hover .modbtns{display:flex}
       <button class="tog" id="tSlow" aria-pressed="false" type="button"><span class="dot"></span>저속모드</button>
       <button class="tog" id="tFreeze" aria-pressed="false" type="button"><span class="dot"></span>채팅 얼리기</button>
       <button class="tog danger" id="tMod" aria-pressed="false" type="button"><span class="dot"></span>매니저 모드</button>
+      <button class="tog" id="tJoin" aria-pressed="true" type="button"><span class="dot"></span>입장 표시</button>
       <button class="tog" id="tSize" aria-pressed="false" type="button"><span class="dot"></span>글자 크게</button>
     </div>
 
@@ -324,7 +375,8 @@ body.modon .msg:hover .modbtns{display:flex}
         <div class="m"><span class="k">DISP</span><span><b>표시</b> 뱃지·닉색·이모티콘, 자동 스크롤/스크롤업 최신 미리보기, 고정 공지</span></div>
         <div class="m"><span class="k">SEND</span><span><b>전송</b> 입력·글자수(100)·저속모드 카운트다운·차단 사유</span></div>
         <div class="m"><span class="k">DONO</span><span><b>후원</b> 별풍선/치즈 금액대별 색상 카드(4단계)</span></div>
-        <div class="m"><span class="k">MOD</span><span><b>모더레이션</b> 공지 등록/고정, 클린봇 L1·L2, 삭제/타임아웃, 얼리기, 등급 게이트</span></div>
+        <div class="m"><span class="k">MOD</span><span><b>모더레이션</b> 공지 등록/고정, 유저 프로필 카드(닉 클릭)·신고, 삭제/타임아웃, 얼리기, 등급 게이트</span></div>
+        <div class="m"><span class="k">SET</span><span><b>설정</b> 클린봇 on/off, 저속모드, 입장 표시 on/off, 글자 크기, 테마</span></div>
         <div class="m"><span class="k">BOT</span><span><b>클린봇</b> 정규화·자모 사전 매칭 + 도배/광고 탐지 → 블라인드(개인 보기)</span></div>
       </div>
       <p style="margin-top:11px">근거 문서: chzzk-chat-spec · sooplive-chat-spec · chat-service-roadmap</p>
@@ -345,11 +397,15 @@ body.modon .msg:hover .modbtns{display:flex}
   <div class="popbody" id="popbody"></div>
 </div>
 
+<div class="modal" id="modal" hidden><div class="mback" id="mback"></div><div class="mpanel" id="mpanel"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <script>
 "use strict";
 /* ---------- state ---------- */
-var S = { cleanbot:true, slow:false, freeze:false, mod:false, big:false, cool:0, atBottom:true, grade:1 };
+var S = { cleanbot:true, slow:false, freeze:false, mod:false, big:false, cool:0, atBottom:true, grade:1, showJoin:true };
 var recent = {}; // userId -> [{t, norm}]
+var userReg = {}; // uid -> {nick,color,badge} (프로필 카드용)
 var list = document.getElementById('list');
 var anchor = document.getElementById('anchor');
 
@@ -426,21 +482,28 @@ function addMsg(m){ // {uid,nick,color,badge:[{c,l}],text,mine}
   var wasBottom = nearBottom();
   var v = m.mine ? {act:'pass'} : judge(m.uid, m.text);
   if(m.mine && S.cleanbot){ v = judge('me:'+(m.nick||'me'), m.text); } // 본인도 판정(데모)
+  userReg[m.uid]={nick:m.nick,color:m.color,badge:m.badge||[]};
   var el=document.createElement('div');
   el.className='msg'+(m.mine?' mine':'')+(v.act==='blind'?' blinded':'');
   var bdg=(m.badge||[]).map(function(b){return '<span class="bdg '+b.c+'">'+b.l+'</span>';}).join('');
   el.innerHTML = bdg
-    + '<span class="nk" style="color:'+(m.color||'var(--ink)')+'">'+esc(m.nick)+'</span> '
+    + '<span class="nk" role="button" tabindex="0" data-uid="'+esc(m.uid)+'" style="color:'+(m.color||'var(--ink)')+'">'+esc(m.nick)+'</span> '
     + '<span class="tx">'+renderText(m.text)+'</span>'
     + '<span class="blindnote">클린봇이 가린 메시지 ('+(v.why||'')+')</span>'
     + '<button class="reveal" type="button">보기</button>'
-    + '<span class="modbtns"><button data-a="pin" type="button">공지</button><button data-a="del" type="button">삭제</button><button data-a="to" type="button">타임아웃</button></span>';
+    + '<span class="tools">'
+    +   '<button class="rp" data-a="report" type="button" title="신고">🚩</button>'
+    +   '<button class="mo" data-a="pin" type="button">공지</button>'
+    +   '<button class="mo" data-a="del" type="button">삭제</button>'
+    +   '<button class="mo" data-a="to" type="button">타임아웃</button>'
+    + '</span>';
   el.querySelector('.reveal').addEventListener('click',function(){ el.classList.add('revealed'); });
-  el.querySelector('.modbtns').addEventListener('click',function(e){
+  el.querySelector('.tools').addEventListener('click',function(e){
     var a=e.target.getAttribute('data-a');
     if(a==='del'){ el.classList.add('gone'); }
     else if(a==='to'){ el.classList.add('gone'); addSys('⛔ '+m.nick+' 님이 타임아웃되었습니다 (60초)'); }
     else if(a==='pin'){ noticeText=m.nick+': '+m.text; renderNotice(); addSys('📌 채팅이 공지로 등록되었습니다'); }
+    else if(a==='report'){ openReport('메시지: “'+m.text.slice(0,24)+(m.text.length>24?'…':'')+'”', m.nick); }
   });
   list.appendChild(el); trim();
   if(wasBottom||m.mine){ scrollEnd(); }
@@ -451,8 +514,12 @@ function addMsg(m){ // {uid,nick,color,badge:[{c,l}],text,mine}
     bumpPreview(pv); S.atBottom=false;
   }
 }
-function addSys(t){ var e=document.createElement('div'); e.className='sys'; e.textContent=t;
-  var wb=nearBottom(); list.appendChild(e); trim(); if(wb) scrollEnd(); else bumpPreview('<i>'+esc(t)+'</i>'); }
+function addSys(t, kind){ var e=document.createElement('div'); e.className='sys'+(kind?' '+kind:''); e.textContent=t;
+  var hide = kind==='join' && !S.showJoin; if(hide) e.classList.add('jhide');
+  var wb=nearBottom(); list.appendChild(e); trim();
+  if(hide) return;
+  if(wb) scrollEnd(); else bumpPreview('<i>'+esc(t)+'</i>'); }
+function applyJoin(){ Array.prototype.forEach.call(list.querySelectorAll('.sys.join'),function(e){ e.classList.toggle('jhide', !S.showJoin); }); }
 function addDono(nick,kind,amt,text){
   var wb=nearBottom(); var tier = amt>=10000?'t4':amt>=1000?'t3':amt>=100?'t2':'';
   var e=document.createElement('div'); e.className='dono '+tier;
@@ -552,7 +619,7 @@ var simTimer;
 function simTick(){
   var c=ch(), u=pick(c.users);
   addMsg({uid:u.uid,nick:u.nick,color:u.color,badge:u.badge,text:pick(c.lines)});
-  if(Math.random()<0.10) addSys('🔔 '+pick(['하치','머독','키위','단즈'])+Math.floor(Math.random()*99)+' 님이 입장하였습니다');
+  if(Math.random()<0.10) addSys('🔔 '+pick(['하치','머독','키위','단즈'])+Math.floor(Math.random()*99)+' 님이 입장하였습니다','join');
   if(Math.random()<0.06) addDono(pick(c.users).nick,c.dono||'후원',pick(c.amts||[10,50,100]),pick(['화이팅!','굿방 감사 :하트:','']));
   simTimer=setTimeout(simTick, 1400+Math.random()*2200);
 }
@@ -598,6 +665,7 @@ toggle('tCleanbot','cleanbot',updHint);
 toggle('tSlow','slow',function(){updHint();refreshGate();});
 toggle('tFreeze','freeze',function(){ refreshGate(); addSys(S.freeze?'❄️ 스트리머가 채팅을 얼렸습니다 (구독팬 이상 참여)':'☀️ 채팅 얼리기가 해제되었습니다'); });
 toggle('tMod','mod',function(){ document.body.classList.toggle('modon',S.mod); renderNotice(); addSys(S.mod?'🛡️ 매니저 모드 ON — 공지 등록·메시지 관리 가능':'매니저 모드 OFF'); });
+toggle('tJoin','showJoin',applyJoin);
 document.getElementById('tSize').addEventListener('click',function(){ S.big=!S.big; this.setAttribute('aria-pressed',S.big);
   document.documentElement.style.setProperty('--cfont', S.big?'17px':'15px'); });
 /* ---------- 공지사항 등록/수정 (매니저 모드) ---------- */
@@ -688,6 +756,71 @@ document.getElementById('popMin').addEventListener('click',function(){ popout.cl
   bar.addEventListener('mousedown',down); addEventListener('mousemove',move); addEventListener('mouseup',up);
   bar.addEventListener('touchstart',down,{passive:false}); addEventListener('touchmove',move,{passive:false}); addEventListener('touchend',up);
 })();
+
+/* ---------- 유저 프로필 카드 · 신고 · 토스트 ---------- */
+var modal=document.getElementById('modal'), mpanel=document.getElementById('mpanel'),
+    toastEl=document.getElementById('toast'), toastT, pfNick='';
+function openModal(html){ mpanel.innerHTML=html; modal.hidden=false; }
+function closeModal(){ modal.hidden=true; mpanel.innerHTML=''; }
+function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(toastT);
+  toastT=setTimeout(function(){ toastEl.classList.remove('show'); },2400); }
+function badgeHtml(bs){ return (bs||[]).map(function(b){return '<span class="bdg '+b.c+'">'+b.l+'</span>';}).join(''); }
+function gradeOf(u){ var t=(u.badge||[]).map(function(b){return b.c;});
+  if(t.indexOf('bj')>=0)return '스트리머'; if(t.indexOf('mgr')>=0)return '매니저';
+  if(t.indexOf('sub')>=0)return '구독팬'; if(t.indexOf('fan')>=0)return '팬클럽';
+  if(t.indexOf('sup')>=0)return '서포터'; return '일반'; }
+function hashStr(s){ var h=0; for(var i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))|0; } return Math.abs(h); }
+function won(n){ return n.toLocaleString()+'원'; }
+function openProfile(uid){
+  var u=userReg[uid]; if(!u) return; pfNick=u.nick;
+  var h=hashStr(uid), me=(uid==='me');
+  var total=((h%900)+50)*1000, stream=((h%9)+1)*1000, follow=(h%720)+1;
+  var subB=(u.badge||[]).filter(function(b){return b.c==='sub';})[0];
+  var grade=me?({1:'일반',2:'팔로워',3:'구독팬',9:'매니저'}[S.grade]||'일반'):gradeOf(u);
+  var col=(u.color&&u.color.indexOf('var(')<0)?u.color:'#6b7bff';
+  var acts='<button class="primary" data-pa="follow" type="button">＋ 팔로우</button>'
+    +'<button data-pa="whisper" type="button">귓속말</button>'
+    +'<button class="rep" data-pa="report" type="button">🚩 신고</button>';
+  if(S.mod && !me) acts+='<button class="mod" data-pa="ban" type="button">채팅금지</button>'
+    +'<button class="mod" data-pa="timeout" type="button">타임아웃</button>'
+    +'<button class="mod" data-pa="promote" type="button">매니저 임명</button>';
+  openModal(
+    '<div class="pf-top"><div class="pf-av" style="background:'+col+'"></div>'
+    +'<div><div class="pf-nick">'+badgeHtml(u.badge)+esc(u.nick)+'</div>'
+    +'<div class="pf-grade">'+grade+(subB?' · 구독 '+subB.l+'개월':'')+'</div></div>'
+    +'<button class="pf-x" data-pa="close" type="button">✕</button></div>'
+    +'<div class="pf-stats">'
+    +'<div><b>'+won(total)+'</b><span>누적 후원</span></div>'
+    +'<div><b>'+won(stream)+'</b><span>이번 방송</span></div>'
+    +'<div><b>'+follow+'일</b><span>팔로우 기간</span></div>'
+    +'<div><b>'+(subB?subB.l+'개월':'-')+'</b><span>구독</span></div></div>'
+    +'<div class="pf-acts">'+acts+'</div>'
+  );
+}
+var REASONS=['스팸/도배','욕설/비하','음란·부적절','광고/홍보','기타'];
+function openReport(targetLabel, nick){
+  pfNick=nick||pfNick;
+  openModal('<div class="rp-wrap"><h4>신고하기</h4><p class="tgt">'+esc(targetLabel)+'</p>'
+    +'<div class="rp-reasons">'
+    + REASONS.map(function(r,i){return '<label><input type="radio" name="rpr" value="'+r+'"'+(i===0?' checked':'')+'>'+r+'</label>';}).join('')
+    +'</div><div class="rp-btns"><button class="cancel" data-pa="close" type="button">취소</button>'
+    +'<button class="submit" data-pa="submitrep" type="button">신고 제출</button></div></div>');
+}
+mpanel.addEventListener('click',function(e){
+  var pa=e.target.getAttribute('data-pa'); if(!pa) return;
+  if(pa==='close'){ closeModal(); }
+  else if(pa==='follow'){ closeModal(); toast(pfNick+' 님을 팔로우했습니다'); }
+  else if(pa==='whisper'){ closeModal(); toast('귓속말은 데모에서 준비 중입니다'); }
+  else if(pa==='report'){ openReport('유저: '+pfNick, pfNick); }
+  else if(pa==='ban'){ closeModal(); addSys('🚫 '+pfNick+' 님이 채팅금지되었습니다'); toast('채팅금지 적용됨'); }
+  else if(pa==='timeout'){ closeModal(); addSys('⛔ '+pfNick+' 님이 타임아웃되었습니다 (60초)'); }
+  else if(pa==='promote'){ closeModal(); addSys('🛡️ '+pfNick+' 님이 매니저로 임명되었습니다'); }
+  else if(pa==='submitrep'){ var r=mpanel.querySelector('input[name=rpr]:checked'); closeModal(); toast('🚩 신고가 접수되었습니다'+(r?' · '+r.value:'')); }
+});
+document.getElementById('mback').addEventListener('click',closeModal);
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!modal.hidden) closeModal(); });
+list.addEventListener('click',function(e){ var nk=e.target.closest('.nk'); if(nk&&nk.dataset.uid) openProfile(nk.dataset.uid); });
+list.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ')){ var nk=e.target.closest('.nk'); if(nk&&nk.dataset.uid){ e.preventDefault(); openProfile(nk.dataset.uid); } } });
 
 /* ---------- boot ---------- */
 S.ch=CHANNELS[0].id;
