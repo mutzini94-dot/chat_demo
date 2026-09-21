@@ -287,6 +287,30 @@ body.modon .tools .mo{display:inline-block}
   background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;padding:10px 16px;border-radius:22px;
   box-shadow:var(--shadow-lg);opacity:0;transition:.2s;pointer-events:none;max-width:calc(100vw - 32px);text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 참여형 (투표/승부예측) */
+.poll[hidden]{display:none!important}
+.poll{border-bottom:1px solid var(--line-2);background:color-mix(in srgb,var(--accent) 7%,var(--panel));padding:10px 12px}
+.poll-h{display:flex;align-items:center;gap:8px;font-size:11px}
+.poll-k{font-weight:700;color:var(--accent-ink)}
+.poll-st{font-family:"IBM Plex Mono",monospace;color:var(--ink-3)}
+.poll-x{margin-left:auto;background:none;border:none;color:var(--ink-3);font-size:13px;cursor:pointer}
+.poll-t{font-size:13.5px;font-weight:600;margin:6px 0 9px}
+.poll-opts{display:flex;flex-direction:column;gap:6px}
+.poll-opt{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 11px;font-size:12.5px;color:var(--ink);cursor:pointer;text-align:left}
+.poll-opt:hover:not(:disabled){border-color:var(--accent)}
+.poll-opt:disabled{cursor:default}
+.poll-bar{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--accent) 20%,transparent);z-index:0;transition:width .3s}
+.poll-opt.mine{border-color:var(--accent)}
+.poll-opt.mine .poll-bar{background:color-mix(in srgb,var(--accent) 32%,transparent)}
+.poll-opt.win{border-color:var(--keep)}
+.poll-opt.win .poll-bar{background:color-mix(in srgb,var(--keep) 30%,transparent)}
+.poll-lb,.poll-pc{position:relative;z-index:1}
+.poll-lb{font-weight:600}
+.poll-pc{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-2);white-space:nowrap}
+.poll-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;font-size:11px;color:var(--ink-3)}
+.poll-end{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer}
 </style>
 
 <div class="wrap">
@@ -318,6 +342,7 @@ body.modon .tools .mo{display:inline-block}
     </div>
 
     <div class="notice" id="notice"></div>
+    <div class="poll" id="pollBox" hidden></div>
 
     <div style="position:relative;flex:1;display:flex;min-height:0">
       <div class="list" id="list" aria-live="polite"></div>
@@ -333,7 +358,6 @@ body.modon .tools .mo{display:inline-block}
       <div class="emorow" id="emorow"></div>
       <div class="ibox">
         <button class="ib" id="emoBtn" type="button" aria-label="이모티콘">😀</button>
-        <button class="ib" id="donoBtn" type="button" aria-label="후원" title="별풍선/치즈 후원">🎈</button>
         <input id="msgIn" maxlength="100" placeholder="채팅 입력 (c)" autocomplete="off">
         <button class="send" id="sendBtn" type="button">보내기</button>
       </div>
@@ -361,8 +385,8 @@ body.modon .tools .mo{display:inline-block}
       <h3><span class="n">DEMO</span> 이렇게 체험하세요</h3>
       <p>버튼을 누르면 실제 채팅에 이벤트가 발생합니다. 클린봇 판정은 클라이언트에서 진짜로 실행됩니다(정규화+사전+스팸). <b>매니저 모드</b>를 켜면 상단에서 <b>공지를 등록·수정</b>하거나, 채팅 위에 마우스를 올려 <b>“공지”로 고정</b>할 수 있어요.</p>
       <div class="tryrow">
-        <button id="bDono" type="button">🎈 후원 보내기</button>
-        <button id="bBig" type="button">💎 대형 후원</button>
+        <button id="bVote" type="button">🗳️ 투표 시작</button>
+        <button id="bPred" type="button">⚔️ 승부예측</button>
         <button id="bSub" type="button">⭐ 구독 발생</button>
         <button class="warn" id="bBad" type="button">🧹 비속어(데모)</button>
         <button class="warn" id="bSpam" type="button">🔁 도배 시뮬</button>
@@ -376,7 +400,7 @@ body.modon .tools .mo{display:inline-block}
         <div class="m"><span class="k">CH</span><span><b>채널</b> 상단 탭으로 투네이션·치지직·유튜브 전환 (플랫폼별 독립 채팅·공지·후원 재화)</span></div>
         <div class="m"><span class="k">DISP</span><span><b>표시</b> 뱃지·닉색·이모티콘, 자동 스크롤/스크롤업 최신 미리보기, 고정 공지</span></div>
         <div class="m"><span class="k">SEND</span><span><b>전송</b> 입력·글자수(100)·저속모드 카운트다운·차단 사유</span></div>
-        <div class="m"><span class="k">DONO</span><span><b>후원</b> 별풍선/치즈 금액대별 색상 카드(4단계)</span></div>
+        <div class="m"><span class="k">INT</span><span><b>참여형</b> 실시간 투표 · 승부예측(응원팀 선택) — 진행률 바·집계·결과 발표</span></div>
         <div class="m"><span class="k">MOD</span><span><b>모더레이션</b> 공지 등록/고정, 유저 프로필 카드(닉 클릭)·신고, 삭제/타임아웃, 얼리기, 등급 게이트</span></div>
         <div class="m"><span class="k">SET</span><span><b>설정</b> 클린봇 on/off, 저속모드, 입장 표시 on/off, 글자 크기, 테마</span></div>
         <div class="m"><span class="k">BOT</span><span><b>클린봇</b> 정규화·자모 사전 매칭 + 도배/광고 탐지 → 블라인드(개인 보기)</span></div>
@@ -523,16 +547,6 @@ function addSys(t, kind){ var e=document.createElement('div'); e.className='sys'
   if(hide) return;
   if(wb) scrollEnd(); else bumpPreview('<i>'+esc(t)+'</i>'); }
 function applyJoin(){ Array.prototype.forEach.call(list.querySelectorAll('.sys.join'),function(e){ e.classList.toggle('jhide', !S.showJoin); }); }
-function addDono(nick,kind,amt,text){
-  var wb=nearBottom(); var tier = amt>=10000?'t4':amt>=1000?'t3':amt>=100?'t2':'';
-  var e=document.createElement('div'); e.className='dono '+tier;
-  var unit = kind==='치즈'?'치즈':kind==='슈퍼챗'?'원':kind==='후원'?'원':'개';
-  e.innerHTML='<div class="h"><span class="amt">🎈 '+esc(nick)+'</span><span class="k">'+kind+'</span></div>'
-    +'<div class="h" style="margin-top:3px"><span></span><span>'+amt.toLocaleString()+' '+unit+'</span></div>'
-    +(text?'<div class="m">'+renderText(esc(text))+'</div>':'');
-  list.appendChild(e); trim(); if(wb) scrollEnd(); else bumpPreview('🎈 <span class="nk">'+esc(nick)+'</span> 님의 '+kind+' 후원');
-  bumpViewers(1);
-}
 function trim(){ while(list.children.length>140) list.removeChild(list.firstChild); }
 
 /* ---------- simulation ---------- */
@@ -575,10 +589,10 @@ var U_YT=[
 var L_YT=['LETS GO :불:','ㅋㅋㅋ','first!','GG','오 이거 클립각','슈퍼챗 쏩니다','굿콘텐츠 :따봉:','알림 뜨자마자 왔어요'];
 var CHANNELS=[
  {id:'toon',name:'투네이션',dono:'후원',amts:[5000,10000,30000],streamer:'데모 크리에이터',sub:'투네이션 통합 채팅',viewers:1284,
-   notice:'후원 이펙트: 5천원 → 인사, 3만원 → 룰렛! 채팅 매너 지켜주세요 🙏',users:U_TOON,lines:L_TOON,
+   notice:'채팅 매너 지켜주세요 🙏 투표 진행 중일 땐 적극 참여!',users:U_TOON,lines:L_TOON,
    seed:[['열혈팬1호','var(--bj)',[{c:'fan',l:'열혈'}],'오늘도 왔습니다 :파티:'],['응원해요','#c58a12',[],'안녕하세요~'],['단골도네','#2f8fd0',[{c:'sup',l:'서포터'}],'후원 준비 완료 :불:']]},
  {id:'chzzk',name:'치지직',dono:'치즈',amts:[100,1000,5000],streamer:'치지직 스트리머',sub:'치지직 라이브 · 종합게임',viewers:8921,
-   notice:'치즈 후원 이펙트 · 구독하면 전용 이모티콘! 🧀',users:U_CHZ,lines:L_CHZ,
+   notice:'구독하면 전용 이모티콘 사용 가능! 🧀',users:U_CHZ,lines:L_CHZ,
    seed:[['갈비세끼','var(--bj)',[{c:'sub',l:'29'}],'오 시작한다 :파티:'],['종겜러','#e0563b',[{c:'fan',l:'팬'}],'핀볼 가보자 :불:']]},
  {id:'youtube',name:'유튜브',dono:'슈퍼챗',amts:[2000,5000,20000],streamer:'Demo Channel',sub:'YouTube Live',viewers:15230,
    notice:'멤버십 가입하고 전용 뱃지 받아가세요! ▶️',users:U_YT,lines:L_YT,
@@ -623,7 +637,6 @@ function simTick(){
   var c=ch(), u=pick(c.users);
   addMsg({uid:u.uid,nick:u.nick,color:u.color,badge:u.badge,text:pick(c.lines)});
   if(Math.random()<0.10) addSys('🔔 '+pick(['하치','머독','키위','단즈'])+Math.floor(Math.random()*99)+' 님이 입장하였습니다','join');
-  if(Math.random()<0.06) addDono(pick(c.users).nick,c.dono||'후원',pick(c.amts||[10,50,100]),pick(['화이팅!','굿방 감사 :하트:','']));
   simTimer=setTimeout(simTick, 1400+Math.random()*2200);
 }
 function bumpViewers(n){ var v=document.getElementById('viewers'); var c=parseInt(v.textContent.replace(/,/g,''))+n; v.textContent=c.toLocaleString(); }
@@ -712,17 +725,9 @@ Object.keys(EMO).forEach(function(k){ var b=document.createElement('button'); b.
   b.addEventListener('click',function(){ msgIn.value+=k; msgIn.focus(); }); emorow.appendChild(b); });
 document.getElementById('emoBtn').addEventListener('click',function(){ emorow.classList.toggle('show'); });
 
-/* ---------- donation from input (sandbox-safe, no prompt) ---------- */
-var donoAmts=[100,300,1000,5000], donoIdx=0;
-document.getElementById('donoBtn').addEventListener('click',function(){
-  var amt=donoAmts[donoIdx%donoAmts.length]; donoIdx++;
-  var msg=msgIn.value.trim()||'오늘도 화이팅! :불:';
-  addDono('나',(amt>=1000?'치즈':'별풍선'),amt,msg); msgIn.value=''; scrollEnd();
-});
-
 /* ---------- try buttons ---------- */
-document.getElementById('bDono').addEventListener('click',function(){ addDono('후원러'+Math.floor(Math.random()*99),'별풍선',pick([50,100,300]),pick(['굿방 :하트:','오늘도 화이팅!','재밌어요 ㅋㅋ'])); scrollEnd(); });
-document.getElementById('bBig').addEventListener('click',function(){ addDono('큰손팬','치즈',pick([1000,5000,10000]),'대박 방송 감사합니다 :파티::불:'); scrollEnd(); });
+document.getElementById('bVote').addEventListener('click',function(){ startPoll('vote'); });
+document.getElementById('bPred').addEventListener('click',function(){ startPoll('pred'); });
 document.getElementById('bSub').addEventListener('click',function(){ addSys('💜 새콤달콤 님이 3개월 구독했습니다!'); addMsg({uid:'sub'+Date.now(),nick:'새콤달콤',color:'var(--sub)',badge:[{c:'sub',l:'3'}],text:'구독 박았습니다 :하트:'}); scrollEnd(); });
 document.getElementById('bBad').addEventListener('click',function(){ addMsg({uid:'troll'+Math.random(),nick:'분탕러',color:'#e0563b',badge:[],text:pick(['이 바 보 야','ㅁㅊ 멍.청.이','바1보 ㅋㅋ'])}); scrollEnd(); });
 document.getElementById('bSpam').addEventListener('click',function(){ for(var i=0;i<4;i++){ (function(){ addMsg({uid:'spammer',nick:'도배봇',color:'#8a94a4',badge:[],text:'도배도배도배도배도배'}); })(); } scrollEnd(); });
@@ -816,6 +821,61 @@ document.getElementById('mback').addEventListener('click',closeModal);
 document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!modal.hidden) closeModal(); });
 list.addEventListener('click',function(e){ var nk=e.target.closest('.nk'); if(nk&&nk.dataset.uid) openProfile(nk.dataset.uid); });
 list.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ')){ var nk=e.target.closest('.nk'); if(nk&&nk.dataset.uid){ e.preventDefault(); openProfile(nk.dataset.uid); } } });
+
+/* ---------- 참여형: 투표 · 승부예측 ---------- */
+var VOTE_SAMPLES=[
+  {title:'다음 플레이할 게임은?',opts:['핀볼','레이싱','호러','리듬게임']},
+  {title:'오늘 방송 몇 시까지?',opts:['1시간','2시간','밤샘 각']},
+  {title:'점심 뭐 먹을까?',opts:['치킨','피자','국밥']}
+];
+var PRED_SAMPLES=[
+  {title:'이번 세트 승자는?',opts:['블루팀 승','레드팀 승']},
+  {title:'다음 판 결과 예측',opts:['승리','패배']}
+];
+var poll=null, pollTimer=null, pollBox=document.getElementById('pollBox');
+function startPoll(type){
+  if(poll&&poll.open){ toast('이미 진행 중인 '+(poll.type==='vote'?'투표':'예측')+'가 있어요'); return; }
+  var s=type==='vote'?pick(VOTE_SAMPLES):pick(PRED_SAMPLES);
+  poll={type:type,title:s.title,opts:s.opts.map(function(l){return {label:l,votes:Math.floor(Math.random()*6)};}),voted:null,open:true};
+  renderPoll();
+  addSys((type==='vote'?'🗳️ 투표':'⚔️ 승부예측')+'가 시작되었습니다 · '+poll.title);
+  clearInterval(pollTimer);
+  pollTimer=setInterval(function(){ if(!poll||!poll.open){clearInterval(pollTimer);return;}
+    poll.opts[Math.floor(Math.random()*poll.opts.length)].votes+=Math.floor(Math.random()*3)+1; renderPoll(); },1500);
+}
+function renderPoll(){
+  if(!poll){ pollBox.hidden=true; pollBox.innerHTML=''; return; }
+  var total=poll.opts.reduce(function(a,o){return a+o.votes;},0)||1;
+  var isPred=poll.type==='pred', maxv=Math.max.apply(null,poll.opts.map(function(o){return o.votes;}));
+  var opts=poll.opts.map(function(o,i){
+    var pct=Math.round(o.votes/total*100), win=(!poll.open&&o.votes===maxv);
+    return '<button class="poll-opt'+(poll.voted===i?' mine':'')+(win?' win':'')+'" data-i="'+i+'"'+(poll.open?'':' disabled')+'>'
+      +'<span class="poll-bar" style="width:'+pct+'%"></span>'
+      +'<span class="poll-lb">'+esc(o.label)+(poll.voted===i?' ✓':'')+(win?' 🏆':'')+'</span>'
+      +'<span class="poll-pc">'+pct+'% · '+o.votes+'표</span></button>';
+  }).join('');
+  pollBox.innerHTML=
+    '<div class="poll-h"><span class="poll-k">'+(isPred?'⚔️ 승부예측':'🗳️ 투표')+'</span>'
+    +'<span class="poll-st">'+(poll.open?'진행중':'종료')+' · 총 '+total+'표</span>'
+    +'<button class="poll-x" data-a="closebox" type="button" title="닫기">✕</button></div>'
+    +'<div class="poll-t">'+esc(poll.title)+'</div>'
+    +'<div class="poll-opts">'+opts+'</div>'
+    +'<div class="poll-foot"><span>'+(poll.open?(poll.voted!=null?'참여 완료 · 다른 항목을 눌러 변경':(isPred?'응원할 쪽을 선택하세요':'항목을 선택해 참여')):'결과가 발표되었습니다')+'</span>'
+    +(poll.open?'<button class="poll-end" data-a="end" type="button">종료·결과</button>':'')+'</div>';
+  pollBox.hidden=false;
+}
+pollBox.addEventListener('click',function(e){
+  var da=e.target.closest('[data-a]'), a=da?da.getAttribute('data-a'):null;
+  if(a==='closebox'){ poll=null; clearInterval(pollTimer); renderPoll(); return; }
+  if(a==='end'){ if(poll){ poll.open=false; clearInterval(pollTimer); renderPoll();
+    var mx=Math.max.apply(null,poll.opts.map(function(o){return o.votes;}));
+    var w=poll.opts.filter(function(o){return o.votes===mx;})[0];
+    addSys('🏁 '+(poll.type==='vote'?'투표':'예측')+' 종료 · 결과: '+w.label); } return; }
+  var opt=e.target.closest('.poll-opt');
+  if(opt&&poll&&poll.open){ var i=parseInt(opt.getAttribute('data-i'));
+    if(poll.voted!==i){ if(poll.voted!=null) poll.opts[poll.voted].votes=Math.max(0,poll.opts[poll.voted].votes-1);
+      poll.opts[i].votes++; poll.voted=i; renderPoll(); } }
+});
 
 /* ---------- boot ---------- */
 S.ch=CHANNELS[0].id;
