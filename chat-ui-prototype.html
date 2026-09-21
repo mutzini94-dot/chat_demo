@@ -317,6 +317,20 @@ body.modon .tools .mo{display:inline-block}
 .poll-pc{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-2);white-space:nowrap}
 .poll-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;font-size:11px;color:var(--ink-3)}
 .poll-end{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer}
+
+/* 투표/승부예측 편집 창 */
+.ed-wrap{padding:16px}
+.ed-wrap h4{margin:0 0 12px;font-size:15px}
+.ed-lb{display:block;font-size:11px;font-family:"IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:0 0 5px}
+.ed-title{width:100%;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);border-radius:9px;height:34px;padding:0 11px;font-family:inherit;font-size:13.5px;margin-bottom:12px}
+.ed-opts{display:flex;flex-direction:column;gap:7px}
+.ed-opt{display:flex;gap:7px;align-items:center}
+.ed-opt-in{flex:1;min-width:0;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);border-radius:9px;height:32px;padding:0 11px;font-family:inherit;font-size:13px}
+.ed-del{flex:0 0 auto;width:30px;height:32px;border:1px solid var(--line);background:var(--panel);color:var(--ink-3);border-radius:8px;cursor:pointer}
+.ed-del:hover{color:var(--crit);border-color:var(--crit)}
+.ed-add{margin-top:9px;width:100%;border:1px dashed var(--line);background:none;color:var(--accent);border-radius:9px;padding:8px;font-weight:600;font-size:12.5px;cursor:pointer}
+.ed-add:hover{border-color:var(--accent)}
+.ed-start{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff}
 </style>
 
 <div class="wrap">
@@ -867,6 +881,13 @@ mpanel.addEventListener('click',function(e){
   else if(pa==='unblockrow'){ var bu=e.target.getAttribute('data-uid'); var uu=userReg[bu]; unblockUser(bu, uu&&uu.nick); openBlockList(); }
   else if(pa==='report'){ openReport('유저: '+pfNick, pfNick); }
   else if(pa==='submitrep'){ var r=mpanel.querySelector('input[name=rpr]:checked'); closeModal(); toast('🚩 신고가 접수되었습니다'+(r?' · '+r.value:'')); }
+  else if(pa==='addopt'){ syncEditorInputs(); if(edOpts.length<6){ edOpts.push(''); edFocus=edOpts.length-1; renderPollEditor(); } }
+  else if(pa==='delopt'){ syncEditorInputs(); edOpts.splice(parseInt(e.target.getAttribute('data-i')),1); renderPollEditor(); }
+  else if(pa==='startpoll'){ syncEditorInputs();
+    var ti=(edTitle||'').trim()||(edType==='pred'?'승부예측':'투표');
+    var op=edOpts.map(function(x){return (x||'').trim();}).filter(Boolean);
+    if(op.length<2){ toast('항목을 2개 이상 입력하세요'); return; }
+    closeModal(); launchPoll(edType,ti,op); }
 });
 document.getElementById('mback').addEventListener('click',closeModal);
 document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!modal.hidden) closeModal(); });
@@ -884,10 +905,38 @@ var PRED_SAMPLES=[
   {title:'다음 판 결과 예측',opts:['승리','패배']}
 ];
 var poll=null, pollTimer=null, pollBox=document.getElementById('pollBox');
+var edType='vote', edTitle='', edOpts=[], edFocus=-1;
 function startPoll(type){
   if(poll&&poll.open){ toast('이미 진행 중인 '+(poll.type==='vote'?'투표':'예측')+'가 있어요'); return; }
-  var s=type==='vote'?pick(VOTE_SAMPLES):pick(PRED_SAMPLES);
-  poll={type:type,title:s.title,opts:s.opts.map(function(l){return {label:l,votes:Math.floor(Math.random()*6)};}),voted:null,open:true};
+  openPollEditor(type);
+}
+function openPollEditor(type){
+  edType=type; var s=type==='vote'?pick(VOTE_SAMPLES):pick(PRED_SAMPLES);
+  edTitle=s.title; edOpts=s.opts.slice(); edFocus=-1; renderPollEditor();
+}
+function syncEditorInputs(){
+  var t=mpanel.querySelector('#edTitle'); if(t) edTitle=t.value;
+  var ins=mpanel.querySelectorAll('.ed-opt-in'); if(ins.length) edOpts=[].map.call(ins,function(i){return i.value;});
+}
+function renderPollEditor(){
+  var isPred=edType==='pred';
+  var optsHtml=edOpts.map(function(o,i){
+    return '<div class="ed-opt"><input class="ed-opt-in" data-i="'+i+'" value="'+esc(o)+'" placeholder="항목 '+(i+1)+'" maxlength="24">'
+      +(edOpts.length>2?'<button class="ed-del" data-pa="delopt" data-i="'+i+'" type="button" title="항목 삭제">✕</button>':'')+'</div>';
+  }).join('');
+  openModal('<div class="ed-wrap"><h4>'+(isPred?'⚔️ 승부예측 만들기':'🗳️ 투표 만들기')+'</h4>'
+    +'<label class="ed-lb">질문</label>'
+    +'<input id="edTitle" class="ed-title" value="'+esc(edTitle)+'" placeholder="'+(isPred?'예: 이번 세트 승자는?':'예: 다음 플레이할 게임은?')+'" maxlength="40">'
+    +'<label class="ed-lb">항목 ('+(isPred?'응원 대상':'선택지')+')</label>'
+    +'<div class="ed-opts">'+optsHtml+'</div>'
+    +(edOpts.length<6?'<button class="ed-add" data-pa="addopt" type="button">＋ 항목 추가</button>':'')
+    +'<div class="rp-btns"><button data-pa="close" type="button">취소</button>'
+    +'<button class="submit ed-start" data-pa="startpoll" type="button">시작하기</button></div></div>');
+  var f = (edFocus>=0 && mpanel.querySelector('.ed-opt-in[data-i="'+edFocus+'"]')) || mpanel.querySelector('#edTitle');
+  if(f) setTimeout(function(){ try{ f.focus(); }catch(e){} },0); edFocus=-1;
+}
+function launchPoll(type,title,opts){
+  poll={type:type,title:title,opts:opts.map(function(l){return {label:l,votes:Math.floor(Math.random()*6)};}),voted:null,open:true};
   renderPoll();
   addSys((type==='vote'?'🗳️ 투표':'⚔️ 승부예측')+'가 시작되었습니다 · '+poll.title);
   clearInterval(pollTimer);
