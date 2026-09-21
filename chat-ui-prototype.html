@@ -269,7 +269,9 @@ body.modon .tools .mo{display:inline-block}
   color:var(--ink);border-radius:9px;padding:8px 10px;cursor:pointer}
 .pf-acts button.primary{background:var(--accent);color:#fff;border-color:var(--accent);flex-basis:100%}
 .pf-acts button.rep{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 30%,var(--line))}
+.pf-acts button.blk{color:var(--ink);border-color:var(--line)}
 .pf-acts button.mod{color:var(--mgr);border-color:color-mix(in srgb,var(--mgr) 30%,var(--line))}
+.msg.uhide{display:none}
 .rp-wrap{padding:16px}
 .rp-wrap h4{margin:0 0 4px;font-size:15px}
 .rp-wrap .tgt{font-size:12px;color:var(--ink-3);margin:0 0 12px;word-break:break-word}
@@ -505,6 +507,7 @@ function addMsg(m){ // {uid,nick,color,badge:[{c,l}],text,mine}
     else if(a==='pin'){ noticeText=m.nick+': '+m.text; renderNotice(); addSys('📌 채팅이 공지로 등록되었습니다'); }
     else if(a==='report'){ openReport('메시지: “'+m.text.slice(0,24)+(m.text.length>24?'…':'')+'”', m.nick); }
   });
+  if(blocked[m.uid] && !m.mine){ el.classList.add('uhide'); list.appendChild(el); trim(); return; }
   list.appendChild(el); trim();
   if(wasBottom||m.mine){ scrollEnd(); }
   else {
@@ -759,7 +762,11 @@ document.getElementById('popMin').addEventListener('click',function(){ popout.cl
 
 /* ---------- 유저 프로필 카드 · 신고 · 토스트 ---------- */
 var modal=document.getElementById('modal'), mpanel=document.getElementById('mpanel'),
-    toastEl=document.getElementById('toast'), toastT, pfNick='';
+    toastEl=document.getElementById('toast'), toastT, pfNick='', pfUid='', blocked={};
+function blockUser(uid,nick){ blocked[uid]=true;
+  Array.prototype.forEach.call(list.querySelectorAll('.msg'),function(el){
+    var nk=el.querySelector('.nk'); if(nk && nk.dataset.uid===uid) el.classList.add('uhide'); });
+  closeModal(); toast(nick+' 님을 차단했습니다'); }
 function openModal(html){ mpanel.innerHTML=html; modal.hidden=false; }
 function closeModal(){ modal.hidden=true; mpanel.innerHTML=''; }
 function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(toastT);
@@ -772,28 +779,20 @@ function gradeOf(u){ var t=(u.badge||[]).map(function(b){return b.c;});
 function hashStr(s){ var h=0; for(var i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))|0; } return Math.abs(h); }
 function won(n){ return n.toLocaleString()+'원'; }
 function openProfile(uid){
-  var u=userReg[uid]; if(!u) return; pfNick=u.nick;
-  var h=hashStr(uid), me=(uid==='me');
-  var total=((h%900)+50)*1000, stream=((h%9)+1)*1000, follow=(h%720)+1;
+  var u=userReg[uid]; if(!u) return; pfUid=uid; pfNick=u.nick;
+  var me=(uid==='me');
   var subB=(u.badge||[]).filter(function(b){return b.c==='sub';})[0];
   var grade=me?({1:'일반',2:'팔로워',3:'구독팬',9:'매니저'}[S.grade]||'일반'):gradeOf(u);
   var col=(u.color&&u.color.indexOf('var(')<0)?u.color:'#6b7bff';
-  var acts='<button class="primary" data-pa="follow" type="button">＋ 팔로우</button>'
-    +'<button data-pa="whisper" type="button">귓속말</button>'
-    +'<button class="rep" data-pa="report" type="button">🚩 신고</button>';
-  if(S.mod && !me) acts+='<button class="mod" data-pa="ban" type="button">채팅금지</button>'
-    +'<button class="mod" data-pa="timeout" type="button">타임아웃</button>'
-    +'<button class="mod" data-pa="promote" type="button">매니저 임명</button>';
+  var acts=me
+    ? '<button data-pa="close" type="button">닫기</button>'
+    : '<button class="blk" data-pa="block" type="button">🚫 차단</button>'
+      +'<button class="rep" data-pa="report" type="button">🚩 신고</button>';
   openModal(
     '<div class="pf-top"><div class="pf-av" style="background:'+col+'"></div>'
     +'<div><div class="pf-nick">'+badgeHtml(u.badge)+esc(u.nick)+'</div>'
     +'<div class="pf-grade">'+grade+(subB?' · 구독 '+subB.l+'개월':'')+'</div></div>'
     +'<button class="pf-x" data-pa="close" type="button">✕</button></div>'
-    +'<div class="pf-stats">'
-    +'<div><b>'+won(total)+'</b><span>누적 후원</span></div>'
-    +'<div><b>'+won(stream)+'</b><span>이번 방송</span></div>'
-    +'<div><b>'+follow+'일</b><span>팔로우 기간</span></div>'
-    +'<div><b>'+(subB?subB.l+'개월':'-')+'</b><span>구독</span></div></div>'
     +'<div class="pf-acts">'+acts+'</div>'
   );
 }
@@ -809,12 +808,8 @@ function openReport(targetLabel, nick){
 mpanel.addEventListener('click',function(e){
   var pa=e.target.getAttribute('data-pa'); if(!pa) return;
   if(pa==='close'){ closeModal(); }
-  else if(pa==='follow'){ closeModal(); toast(pfNick+' 님을 팔로우했습니다'); }
-  else if(pa==='whisper'){ closeModal(); toast('귓속말은 데모에서 준비 중입니다'); }
+  else if(pa==='block'){ blockUser(pfUid,pfNick); }
   else if(pa==='report'){ openReport('유저: '+pfNick, pfNick); }
-  else if(pa==='ban'){ closeModal(); addSys('🚫 '+pfNick+' 님이 채팅금지되었습니다'); toast('채팅금지 적용됨'); }
-  else if(pa==='timeout'){ closeModal(); addSys('⛔ '+pfNick+' 님이 타임아웃되었습니다 (60초)'); }
-  else if(pa==='promote'){ closeModal(); addSys('🛡️ '+pfNick+' 님이 매니저로 임명되었습니다'); }
   else if(pa==='submitrep'){ var r=mpanel.querySelector('input[name=rpr]:checked'); closeModal(); toast('🚩 신고가 접수되었습니다'+(r?' · '+r.value:'')); }
 });
 document.getElementById('mback').addEventListener('click',closeModal);
