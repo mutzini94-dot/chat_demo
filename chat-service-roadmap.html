@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<title>자체 라이브 채팅 서비스 로드맵</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+
+<style>
+:root{
+  --bg:#f5f7fa; --surface:#ffffff; --surface-2:#eef1f6; --surface-3:#e6eaf1;
+  --ink:#141922; --ink-2:#525c6b; --ink-3:#7c8697;
+  --line:#dde2ea; --line-2:#e9edf3;
+  --accent:#3644d9; --accent-ink:#2a36c0; --accent-2:#5b6bf0; --accent-soft:#eaecfc;
+  --crit:#d63241; --crit-soft:#fbe7ea;
+  --warn:#b06a08; --warn-soft:#faf0dd;
+  --keep:#1f8a5b; --keep-soft:#e0f3ea;
+  --info:#2f6ad0; --info-soft:#e7effc;
+  --gold:#b8860b; --gold-soft:#faf1d8;
+  --grape:#7b4dff; --grape-soft:#efe9ff;
+  --shadow:0 1px 2px rgba(20,25,34,.05),0 8px 24px rgba(20,25,34,.06);
+  --shadow-lg:0 2px 6px rgba(20,25,34,.06),0 20px 48px rgba(20,25,34,.10);
+  --radius:14px; --radius-sm:9px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1017; --surface:#151a24; --surface-2:#1c2230; --surface-3:#252d3d;
+    --ink:#e7ecf5; --ink-2:#9aa5b8; --ink-3:#6b7688;
+    --line:#252d3d; --line-2:#181e29;
+    --accent:#6b7bff; --accent-ink:#aeb8ff; --accent-2:#8390ff; --accent-soft:#171f3d;
+    --crit:#ff6b74; --crit-soft:#301518;
+    --warn:#f0ad4e; --warn-soft:#2b2010;
+    --keep:#3ed494; --keep-soft:#0f2a1f;
+    --info:#6ba3ff; --info-soft:#12203a;
+    --gold:#e6b93e; --gold-soft:#2a2410;
+    --grape:#a98bff; --grape-soft:#1e1638;
+    --shadow:0 1px 2px rgba(0,0,0,.34),0 10px 28px rgba(0,0,0,.4);
+    --shadow-lg:0 2px 8px rgba(0,0,0,.4),0 24px 56px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1017; --surface:#151a24; --surface-2:#1c2230; --surface-3:#252d3d;
+  --ink:#e7ecf5; --ink-2:#9aa5b8; --ink-3:#6b7688;
+  --line:#252d3d; --line-2:#181e29;
+  --accent:#6b7bff; --accent-ink:#aeb8ff; --accent-2:#8390ff; --accent-soft:#171f3d;
+  --grape:#a98bff; --grape-soft:#1e1638;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR","IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-weight:400;line-height:1.68;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+.wrap{max-width:980px;margin:0 auto;padding-inline:24px}
+.mono{font-family:"IBM Plex Mono","IBM Plex Sans KR",monospace;font-variant-numeric:tabular-nums}
+b,strong{font-weight:600;color:var(--ink)}
+h2,h3,h4{text-wrap:balance;letter-spacing:-.01em}
+a{color:var(--accent-2);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px;border-radius:4px}
+
+.cover{position:relative;overflow:hidden;border-bottom:1px solid var(--line);
+  background:
+    radial-gradient(120% 120% at 88% -25%,var(--accent-soft) 0%,transparent 55%),
+    radial-gradient(90% 90% at -10% 120%,var(--surface-2) 0%,transparent 60%),
+    var(--surface);}
+.cover .wrap{padding-block:58px 44px;position:relative;z-index:2}
+.brandmark{display:inline-flex;align-items:center;gap:10px;font-family:"IBM Plex Mono",monospace;
+  font-size:12px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-2);animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent-2) 55%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.live-dot{animation:none}}
+.cover h1{font-size:clamp(34px,6.4vw,58px);line-height:1.04;font-weight:700;letter-spacing:-.03em;margin:20px 0 0}
+.cover h1 .accent{color:var(--accent-2)}
+.cover .sub{font-size:clamp(15px,2.2vw,18px);color:var(--ink-2);max-width:62ch;margin:16px 0 0;line-height:1.55}
+.cover .sub b{color:var(--ink)}
+.defn{display:inline-flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.tagchip{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:500;padding:6px 12px;border-radius:8px;
+  background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+.tagchip .plus{color:var(--accent-2);font-weight:600}
+.docmeta{display:flex;flex-wrap:wrap;gap:14px 32px;margin-top:30px;padding-top:22px;border-top:1px solid var(--line-2);
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.docmeta div{display:flex;flex-direction:column;gap:3px}
+.docmeta .k{color:var(--ink-3);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+.docmeta .v{color:var(--ink);font-weight:500}
+.docmeta .v.live{color:var(--accent-2)}
+
+section{padding-block:50px;border-bottom:1px solid var(--line-2)}
+.eyebrow{display:flex;align-items:center;gap:12px;font-family:"IBM Plex Mono",monospace;font-size:12px;
+  font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-2)}
+.eyebrow .en{color:var(--ink-3);font-weight:500}
+.eyebrow::before{content:"";display:inline-block;width:26px;height:1px;background:var(--accent-2);opacity:.6}
+.sec-h{font-size:clamp(23px,3.6vw,30px);font-weight:700;margin:15px 0 0;letter-spacing:-.02em}
+.dek{color:var(--ink-2);max-width:72ch;margin:12px 0 0;font-size:15.5px}
+
+.grid{display:grid;gap:16px;margin-top:26px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:760px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.card h4{margin:0;font-size:16px;font-weight:600}
+.card p{margin:8px 0 0;color:var(--ink-2);font-size:14px}
+.card .ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--accent-soft);
+  color:var(--accent-ink);font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;margin-bottom:13px}
+
+.callout{margin-top:24px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent-2) 30%,transparent);
+  border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:15px;align-items:start}
+.callout.keep{background:var(--keep-soft);border-color:color-mix(in srgb,var(--keep) 30%,transparent)}
+.callout .ci{font-size:20px}
+.callout h4{margin:0 0 5px;font-size:15px}
+.callout p{margin:0;color:var(--ink-2);font-size:14px}
+
+/* phase roadmap */
+.road{margin-top:28px;display:flex;flex-direction:column;gap:16px}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;
+  display:grid;grid-template-columns:132px 1fr;gap:24px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.phase::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--pc,var(--accent))}
+@media(max-width:680px){.phase{grid-template-columns:1fr;gap:14px}}
+.phase .ptag{display:flex;flex-direction:column;gap:8px}
+.phase .pn{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;color:#fff;background:var(--pc,var(--accent));
+  border-radius:7px;padding:6px 10px;text-align:center}
+.phase .pgoal{font-size:12px;color:var(--ink-2);text-align:center;line-height:1.4}
+.phase .pdur{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);text-align:center}
+.phase h4{margin:0 0 3px;font-size:17px}
+.phase .plede{color:var(--ink-2);font-size:13.5px;margin:0 0 14px}
+.feat{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media(max-width:560px){.feat{grid-template-columns:1fr}}
+.feat li{display:grid;grid-template-columns:auto 1fr;gap:9px;font-size:13.5px;color:var(--ink-2);align-items:start}
+.feat li .fk{font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:5px;
+  background:var(--accent-soft);color:var(--accent-ink);white-space:nowrap;margin-top:2px}
+.feat li .fk.bot{background:var(--grape-soft);color:var(--grape)}
+.feat li .fk.mny{background:var(--gold-soft);color:var(--gold)}
+.feat li .fk.mod{background:var(--crit-soft);color:var(--crit)}
+.feat li b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chips span{font-family:"IBM Plex Mono",monospace;font-size:11px;background:var(--surface-2);
+  border:1px solid var(--line);border-radius:20px;padding:3px 10px;color:var(--ink-2)}
+
+/* cleanbot tier */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
+@media(max-width:760px){.tiers{grid-template-columns:1fr}}
+.ct{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;position:relative}
+.ct .cl{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--grape);font-weight:600}
+.ct h4{margin:6px 0 4px;font-size:16px}
+.ct .cw{font-size:12px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.ct p{margin:10px 0 0;font-size:13px;color:var(--ink-2)}
+
+/* table */
+.tblwrap{margin-top:24px;overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line-2);vertical-align:top}
+th{background:var(--surface-2);font-size:10.5px;font-family:"IBM Plex Mono",monospace;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:600}
+td{color:var(--ink-2)}td b{color:var(--ink)}
+tr:last-child td{border-bottom:none}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+.dot.p0{background:var(--ink-3)}.dot.p1{background:var(--keep)}.dot.p2{background:var(--accent)}
+.dot.p3{background:var(--grape)}.dot.p4{background:var(--gold)}
+
+/* nfr / metrics */
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:24px}
+@media(max-width:760px){.kpi{grid-template-columns:repeat(2,1fr)}}
+.kpi .t{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.kpi .lbl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.kpi .big{font-size:26px;font-weight:700;letter-spacing:-.02em;margin:6px 0 2px;color:var(--accent-2)}
+.kpi .cap{font-size:12px;color:var(--ink-2)}
+
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.toc a{font-family:"IBM Plex Mono",monospace;font-size:12px;text-decoration:none;color:var(--ink-2);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 11px}
+.toc a:hover{border-color:var(--accent-2);color:var(--accent-ink)}
+
+footer{padding-block:38px 60px}
+footer .fn{color:var(--ink-3);font-size:12.5px;font-family:"IBM Plex Mono",monospace;text-align:center;line-height:1.7}
+</style>
+
+<header class="cover">
+  <div class="wrap">
+    <div class="brandmark"><span class="live-dot"></span>PRODUCT ROADMAP · LIVE CHAT</div>
+    <h1>자체 라이브 채팅 서비스<br><span class="accent">기능 로드맵</span> MVP → 확장</h1>
+    <p class="sub">치지직·숲(SOOP) 채팅 분석을 토대로, 자체 스트리밍/후원 서비스의 채팅 기능을 <b>4개 단계(+기반)</b>로 배치한 로드맵이다. 각 단계는 <b>후원·모더레이션·클린봇</b>을 어느 수준까지 붙일지를 함께 명시한다.</p>
+    <div class="defn">
+      <span class="tagchip">Phase 0 <span class="plus">기반</span></span>
+      <span class="tagchip">Phase 1 <span class="plus">MVP</span></span>
+      <span class="tagchip">Phase 2 성장</span>
+      <span class="tagchip">Phase 3 확장</span>
+      <span class="tagchip">Phase 4 규모</span>
+    </div>
+    <div class="docmeta">
+      <div><span class="k">문서</span><span class="v">기능 로드맵</span></div>
+      <div><span class="k">근거</span><span class="v">치지직·숲 채팅 명세</span></div>
+      <div><span class="k">버전</span><span class="v mono">v0.1</span></div>
+      <div><span class="k">작성일</span><span class="v mono">2026.09.21</span></div>
+      <div><span class="k">상태</span><span class="v live">초안</span></div>
+    </div>
+    <div class="toc">
+      <a href="#s1">설계 원칙</a>
+      <a href="#s2">단계별 로드맵</a>
+      <a href="#s3">클린봇 단계 이식</a>
+      <a href="#s4">기능 × 단계 매트릭스</a>
+      <a href="#s5">성공 지표</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- 원칙 -->
+<section id="s1"><div class="wrap">
+  <div class="eyebrow">01 · 설계 원칙 <span class="en">Principles</span></div>
+  <h2 class="sec-h">무엇을 먼저, 왜 그 순서로</h2>
+  <p class="dek">두 플랫폼 분석의 결론은 명확하다 — <b>실시간성·안전장치·수익결합</b> 이 셋이 채팅의 뼈대다. 로드맵은 "체감 가치가 크고 의존성이 낮은 것"부터 쌓는다.</p>
+  <div class="grid g3">
+    <div class="card"><div class="ic">P1</div><h4>안전은 1일차부터</h4><p>클린봇 L1(사전)+슬로우모드+수동 삭제는 MVP 필수. 안전 없는 오픈 채팅은 하루면 무너진다.</p></div>
+    <div class="card"><div class="ic">P2</div><h4>후원=관계 맥락</h4><p>후원 채팅은 단순 기능이 아니라 등급·권한과 엮인다. 초기에 후원-등급 연결 고리를 심어둔다.</p></div>
+    <div class="card"><div class="ic">P3</div><h4>확장 대비 설계</h4><p>등급→권한 매핑, 서버 태깅+클라 렌더 분리, 방 분산 여지를 초기 스키마에 반영한다.</p></div>
+  </div>
+</div></section>
+
+<!-- 로드맵 -->
+<section id="s2"><div class="wrap">
+  <div class="eyebrow">02 · 단계별 로드맵 <span class="en">Phased Roadmap</span></div>
+  <h2 class="sec-h">Phase 0 → 4</h2>
+  <p class="dek">범례 — <span class="feat" style="display:inline"><span class="fk">기본</span></span> 채팅 코어 · <span class="fk mny" style="font-size:9.5px;padding:2px 6px;border-radius:5px">수익</span> 후원/구독 · <span class="fk mod" style="font-size:9.5px;padding:2px 6px;border-radius:5px">운영</span> 모더레이션 · <span class="fk bot" style="font-size:9.5px;padding:2px 6px;border-radius:5px">봇</span> 클린봇/자동화</p>
+
+  <div class="road">
+
+    <div class="phase" style="--pc:var(--ink-3)">
+      <div class="ptag"><div class="pn">PHASE 0</div><div class="pgoal">기반 인프라</div><div class="pdur">~3주</div></div>
+      <div>
+        <h4>실시간 채팅 채널</h4>
+        <p class="plede">화면에 메시지가 흐르는 최소 골격. 이후 모든 기능이 여기 얹힌다.</p>
+        <ul class="feat">
+          <li><span class="fk">기본</span><span><b>WebSocket 채널</b> 상시 연결·재연결·백오프</span></li>
+          <li><span class="fk">기본</span><span><b>메시지 렌더</b> 뱃지·닉·본문, 자동 스크롤/잠금</span></li>
+          <li><span class="fk">기본</span><span><b>로그인 게이트</b> 열람=비로그인, 전송=로그인</span></li>
+          <li><span class="fk">기본</span><span><b>표시 버퍼 상한</b> 가상 스크롤 기초</span></li>
+        </ul>
+        <div class="chips"><span>WebSocket</span><span>세션/토큰</span><span>메시지 스키마</span></div>
+      </div>
+    </div>
+
+    <div class="phase" style="--pc:var(--keep)">
+      <div class="ptag"><div class="pn">PHASE 1</div><div class="pgoal">MVP · 첫 운영</div><div class="pdur">~4주</div></div>
+      <div>
+        <h4>보낼 수 있고, 지킬 수 있는 채팅</h4>
+        <p class="plede">진짜 방송에 투입 가능한 최소 안전 세트. "전송 + 최소 모더레이션 + 최소 후원".</p>
+        <ul class="feat">
+          <li><span class="fk">기본</span><span><b>텍스트 전송</b> 글자수 제한·차단 사유 피드백</span></li>
+          <li><span class="fk">기본</span><span><b>기본 이모티콘</b> 피커·인라인 렌더</span></li>
+          <li><span class="fk mod">운영</span><span><b>금칙어 + 클린봇 L1</b> 정규화·자모 사전</span></li>
+          <li><span class="fk mod">운영</span><span><b>슬로우 모드</b> 전송 간격 설정</span></li>
+          <li><span class="fk mod">운영</span><span><b>매니저 삭제·타임아웃</b> 아이디 지정</span></li>
+          <li><span class="fk mod">운영</span><span><b>고정 공지</b> 상단 고정/해제</span></li>
+          <li><span class="fk mny">수익</span><span><b>채팅 후원(텍스트)</b> 금액 강조 카드</span></li>
+          <li><span class="fk">기본</span><span><b>시스템 메시지</b> 입장·후원 알림</span></li>
+        </ul>
+        <div class="chips"><span>클린봇 L1</span><span>슬로우모드</span><span>매니저</span><span>후원 채팅</span></div>
+      </div>
+    </div>
+
+    <div class="phase" style="--pc:var(--accent)">
+      <div class="ptag"><div class="pn">PHASE 2</div><div class="pgoal">성장 · 팬덤</div><div class="pdur">~6주</div></div>
+      <div>
+        <h4>팬을 구분하고, 스팸을 거른다</h4>
+        <p class="plede">구독·팔로우·개인화로 팬덤을 형성하고, 클린봇을 행동 기반까지 확장.</p>
+        <ul class="feat">
+          <li><span class="fk mny">수익</span><span><b>구독</b> 개월 뱃지·전용 이모티콘</span></li>
+          <li><span class="fk mod">운영</span><span><b>팔로워/구독 전용</b> 전송 조건(경과시간)</span></li>
+          <li><span class="fk bot">봇</span><span><b>클린봇 L2</b> 도배·유사반복·광고 탐지</span></li>
+          <li><span class="fk bot">봇</span><span><b>개인 클린봇 토글</b> 서버 태깅+클라 가림</span></li>
+          <li><span class="fk mod">운영</span><span><b>신고</b> 사용자/메시지 신고 큐</span></li>
+          <li><span class="fk">기본</span><span><b>프로필 카드</b> 닉 클릭→관리 액션</span></li>
+          <li><span class="fk">기본</span><span><b>채팅 팝업·설정</b> 글자크기·투명도</span></li>
+          <li><span class="fk mny">수익</span><span><b>영상/미션 후원</b> 오버레이 연동</span></li>
+        </ul>
+        <div class="chips"><span>클린봇 L2</span><span>개인 필터</span><span>구독 뱃지</span><span>신고</span></div>
+      </div>
+    </div>
+
+    <div class="phase" style="--pc:var(--grape)">
+      <div class="ptag"><div class="pn">PHASE 3</div><div class="pgoal">확장 · 차별화</div><div class="pdur">~8주</div></div>
+      <div>
+        <h4>등급 경제와 지능형 운영</h4>
+        <p class="plede">숲 수준의 등급-권한 결합, ML/LLM 클린봇, 다시보기·참여형으로 차별화.</p>
+        <ul class="feat">
+          <li><span class="fk mny">수익</span><span><b>팬 등급 체계</b> 후원 개수→등급 자동</span></li>
+          <li><span class="fk mod">운영</span><span><b>등급별 채팅 권한</b> 얼리기·등급 참여조건</span></li>
+          <li><span class="fk bot">봇</span><span><b>클린봇 L3</b> ML/LLM 애매구간 문맥판단</span></li>
+          <li><span class="fk">기본</span><span><b>다시보기 채팅</b> VOD 타임라인 동기</span></li>
+          <li><span class="fk">기본</span><span><b>채팅 번역</b> 자동/수동</span></li>
+          <li><span class="fk">기본</span><span><b>참여형</b> 투표·승부예측</span></li>
+          <li><span class="fk">기본</span><span><b>귓속말</b> 1:1 + 수신 허용</span></li>
+          <li><span class="fk mod">운영</span><span><b>운영 대시보드</b> 오탐률·차단 로그</span></li>
+        </ul>
+        <div class="chips"><span>클린봇 L3</span><span>등급 경제</span><span>다시보기</span><span>번역</span><span>투표/예측</span></div>
+      </div>
+    </div>
+
+    <div class="phase" style="--pc:var(--gold)">
+      <div class="ptag"><div class="pn">PHASE 4</div><div class="pgoal">규모 · 자동화</div><div class="pdur">지속</div></div>
+      <div>
+        <h4>대형 방송을 감당하는 운영</h4>
+        <p class="plede">동시접속 폭증과 운영 인력 한계를 방 분산·자동화로 해결.</p>
+        <ul class="feat">
+          <li><span class="fk">기본</span><span><b>중계방 분산</b> 본방 만원→분산·정책 동기화</span></li>
+          <li><span class="fk bot">봇</span><span><b>전자비서(룰봇)</b> 자동 명령·응답</span></li>
+          <li><span class="fk bot">봇</span><span><b>AI 요약/민심</b> 방송 요약·키워드</span></li>
+          <li><span class="fk mod">운영</span><span><b>클린봇 피드백 루프</b> 리뷰→사전/모델 갱신</span></li>
+          <li><span class="fk">기본</span><span><b>채널 샤딩</b> 팬아웃 확장</span></li>
+          <li><span class="fk mny">수익</span><span><b>커머스 연동</b> 상품·수익 공유</span></li>
+        </ul>
+        <div class="chips"><span>중계방</span><span>전자비서</span><span>AI 요약</span><span>샤딩</span></div>
+      </div>
+    </div>
+
+  </div>
+</div></section>
+
+<!-- 클린봇 단계 이식 -->
+<section id="s3"><div class="wrap">
+  <div class="eyebrow">03 · 클린봇 단계별 이식 <span class="en">Cleanbot Tiers × Phases</span></div>
+  <h2 class="sec-h">클린봇은 한 번에 만들지 않는다</h2>
+  <p class="dek">클린봇은 3계층을 <b>단계에 나눠</b> 붙인다. L1은 MVP 필수, L2는 성장기, L3(ML/LLM)는 트래픽·예산이 붙는 확장기에.</p>
+  <div class="tiers">
+    <div class="ct"><div class="cl">L1 · PHASE 1</div><h4>사전 · 규칙</h4><div class="cw">동기 · μs~1ms</div><p>한국어 정규화(NFKC·leet·반복축약)+자모 분해 후 Aho-Corasick 사전 매칭. 예외어(allowlist) 우선. 확정 욕설=인라인 차단.</p></div>
+    <div class="ct"><div class="cl">L2 · PHASE 2</div><h4>통계 · 스팸</h4><div class="cw">동기 · 인메모리/Redis</div><p>사용자 슬라이딩 윈도우로 도배·유사반복·초당다발·광고/연락처·저엔트로피 탐지. 점수 합산→강도별 임계값으로 블라인드.</p></div>
+    <div class="ct"><div class="cl">L3 · PHASE 3</div><h4>ML · LLM 문맥</h4><div class="cw">비동기 · 애매구간 한정</div><p>40~80점 애매 구간만 한국어 욕설 분류기 또는 LLM 배치 판정. 전량 아님(비용). 사후 블라인드에만 적용.</p></div>
+  </div>
+  <div class="callout keep">
+    <div class="ci">🛡️</div>
+    <div><h4>공통 원칙 — 서버는 판정, 클라는 렌더</h4><p>차단(block)만 서버가 미전송하고, 의심(blind)은 <b>태그만 붙여 브로드캐스트</b>한다. 최종 가림 여부는 시청자의 "개인 클린봇" 설정이 결정한다. 이 분리가 개인 필터·오탐 대응·투명성의 전제다.</p></div>
+  </div>
+</div></section>
+
+<!-- 매트릭스 -->
+<section id="s4"><div class="wrap">
+  <div class="eyebrow">04 · 기능 × 단계 매트릭스 <span class="en">Matrix</span></div>
+  <h2 class="sec-h">어느 기능이 언제 들어오나</h2>
+  <div class="tblwrap"><table>
+    <thead><tr><th>영역</th><th>기능</th><th>도입 단계</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>코어</td><td>실시간 전송·렌더·자동스크롤</td><td><span class="dot p0"></span> Phase 0</td><td>WebSocket 골격</td></tr>
+      <tr><td>코어</td><td>기본 이모티콘</td><td><span class="dot p1"></span> Phase 1</td><td>MVP</td></tr>
+      <tr><td>운영</td><td>금칙어 + 클린봇 L1</td><td><span class="dot p1"></span> Phase 1</td><td>안전 필수</td></tr>
+      <tr><td>운영</td><td>슬로우모드 · 매니저 삭제/타임아웃</td><td><span class="dot p1"></span> Phase 1</td><td>아이디 지정</td></tr>
+      <tr><td>수익</td><td>채팅 후원(텍스트)</td><td><span class="dot p1"></span> Phase 1</td><td>금액 강조</td></tr>
+      <tr><td>수익</td><td>구독 뱃지 · 전용 이모티콘</td><td><span class="dot p2"></span> Phase 2</td><td>팬덤 형성</td></tr>
+      <tr><td>운영</td><td>팔로워/구독 전용 채팅</td><td><span class="dot p2"></span> Phase 2</td><td>경과시간 조건</td></tr>
+      <tr><td>운영</td><td>클린봇 L2 + 개인 필터 토글</td><td><span class="dot p2"></span> Phase 2</td><td>스팸·도배</td></tr>
+      <tr><td>운영</td><td>신고 · 프로필 카드</td><td><span class="dot p2"></span> Phase 2</td><td>—</td></tr>
+      <tr><td>수익</td><td>팬 등급 + 등급별 채팅 권한</td><td><span class="dot p3"></span> Phase 3</td><td>후원 개수 연동</td></tr>
+      <tr><td>운영</td><td>클린봇 L3 (ML/LLM)</td><td><span class="dot p3"></span> Phase 3</td><td>애매구간 한정</td></tr>
+      <tr><td>코어</td><td>다시보기 채팅 · 번역 · 참여형</td><td><span class="dot p3"></span> Phase 3</td><td>차별화</td></tr>
+      <tr><td>규모</td><td>중계방 분산 · 전자비서 · AI 요약</td><td><span class="dot p4"></span> Phase 4</td><td>대형 방송</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<!-- 지표 -->
+<section id="s5"><div class="wrap">
+  <div class="eyebrow">05 · 성공 지표 <span class="en">Metrics</span></div>
+  <h2 class="sec-h">각 단계에서 볼 숫자</h2>
+  <div class="kpi">
+    <div class="t"><div class="lbl">Realtime</div><div class="big">&lt;300ms</div><div class="cap">전송~수신 체감 지연</div></div>
+    <div class="t"><div class="lbl">Cleanbot</div><div class="big">&lt;1ms</div><div class="cap">L1·L2 판정 p99</div></div>
+    <div class="t"><div class="lbl">Safety</div><div class="big">오탐율</div><div class="cap">블라인드 "보기" 클릭률로 추적</div></div>
+    <div class="t"><div class="lbl">Revenue</div><div class="big">후원 전환</div><div class="cap">채팅 참여→후원 비율</div></div>
+  </div>
+  <div class="callout">
+    <div class="ci">🎯</div>
+    <div><h4>다음 액션</h4><p>Phase 0~1 스코프를 <b>개발 티켓</b>으로 쪼개고, 클린봇 L1 사전(전역+스트리머별 커스텀)의 초기 금칙어/예외어 세트를 확보하는 것이 착수 1순위다. 후원-등급 스키마는 자체 후원 정산 ERD와 함께 설계한다.</p></div>
+  </div>
+</div></section>
+
+</main>
+
+<footer><div class="wrap">
+  <p class="fn">자체 라이브 채팅 서비스 기능 로드맵 · v0.1 · 2026.09.21<br>
+  근거 문서: chzzk-chat-spec.html · sooplive-chat-spec.html</p>
+</div></footer>
+</html>

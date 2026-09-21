@@ -1,0 +1,700 @@
+<title>라이브 채팅 프로토타입</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  /* light palette (complete) */
+  --bg:#eef1f6; --panel:#ffffff; --panel-2:#f3f5fa; --panel-3:#e9edf4;
+  --ink:#161a23; --ink-2:#5a6472; --ink-3:#8a94a4;
+  --line:#e2e7f0; --line-2:#eef1f7;
+  --accent:#4655e6; --accent-2:#6b7bff; --accent-soft:#e9ebfd;
+  --sys:#8a94a4; --sys-bg:#eef1f7;
+  --blind:#8a94a4; --blind-bg:#e9edf4;
+  --bj:#e23b52; --mgr:#2f74d0; --sub:#7b4dff; --fan:#d98a00; --sup:#0bab8a;
+  --don-a:#0bab8a; --don-b:#4655e6; --don-c:#7b4dff; --don-d:#d98a00;
+  --ok:#1f9d61; --warn:#c77400; --crit:#d63241;
+  --shadow:0 1px 2px rgba(18,22,34,.06),0 10px 30px rgba(18,22,34,.08);
+  --radius:14px; --cfont:15px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1017; --panel:#161923; --panel-2:#1d2130; --panel-3:#252a3b;
+    --ink:#e8ebf3; --ink-2:#a0a9bb; --ink-3:#6c7688;
+    --line:#252a3b; --line-2:#1a1e29;
+    --accent:#6b7bff; --accent-2:#8390ff; --accent-soft:#1a2143;
+    --sys:#7a8398; --sys-bg:#1b2030;
+    --blind:#6c7688; --blind-bg:#1b2030;
+    --bj:#ff5568; --mgr:#5b9dff; --sub:#a98bff; --fan:#f0b429; --sup:#20c9a6;
+    --don-a:#12d4ad; --don-b:#6b7bff; --don-c:#a98bff; --don-d:#f0b429;
+    --ok:#3ed494; --warn:#f0ad4e; --crit:#ff6b74;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1017; --panel:#161923; --panel-2:#1d2130; --panel-3:#252a3b;
+  --ink:#e8ebf3; --ink-2:#a0a9bb; --ink-3:#6c7688;
+  --line:#252a3b; --line-2:#1a1e29;
+  --accent:#6b7bff; --accent-2:#8390ff; --accent-soft:#1a2143;
+  --sys:#7a8398; --sys-bg:#1b2030;
+  --blind:#6c7688; --blind-bg:#1b2030;
+  --bj:#ff5568; --mgr:#5b9dff; --sub:#a98bff; --fan:#f0b429; --sup:#20c9a6;
+  --don-a:#12d4ad; --don-b:#6b7bff; --don-c:#a98bff; --don-d:#f0b429;
+  --ok:#3ed494; --warn:#f0ad4e; --crit:#ff6b74;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;line-height:1.5}
+.mono{font-family:"IBM Plex Mono","IBM Plex Sans KR",monospace;font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+
+.wrap{max-width:1080px;margin:0 auto;padding-block:20px 32px;padding-inline:16px;
+  display:grid;grid-template-columns:400px 1fr;gap:22px;align-items:start}
+@media(max-width:860px){.wrap{grid-template-columns:1fr;gap:18px}}
+
+.masthead{grid-column:1/-1;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.masthead h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.02em}
+.masthead .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);
+  border:1px solid var(--line);border-radius:20px;padding:3px 10px}
+.masthead p{margin:0;flex-basis:100%;color:var(--ink-2);font-size:13px}
+
+/* ---------- chat panel ---------- */
+.chat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);display:flex;flex-direction:column;height:76vh;min-height:520px;overflow:hidden}
+.chat .top{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line-2);
+  background:var(--panel-2)}
+.chat .top .av{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--sub));flex:0 0 auto}
+.chat .top .who{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.chat .top .who b{font-size:14px}
+.chat .top .who .st{font-size:11px;color:var(--ink-2)}
+.chat .top .live{margin-left:auto;display:flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;
+  font-size:11px;color:var(--bj);font-weight:600}
+.chat .top .live .d{width:7px;height:7px;border-radius:50%;background:var(--bj);animation:pp 2s infinite}
+@keyframes pp{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--bj) 60%,transparent)}70%{box-shadow:0 0 0 6px transparent}}
+@media(prefers-reduced-motion:reduce){.chat .top .live .d{animation:none}}
+.chat .top .cnt{margin-left:8px;color:var(--ink-3)}
+
+/* channel tabs */
+.chtabs{display:flex;gap:5px;padding:8px 10px;border-bottom:1px solid var(--line-2);background:var(--panel-2);overflow-x:auto}
+.chtabs::-webkit-scrollbar{height:0}
+.chtabs button{flex:0 0 auto;font-family:inherit;font-size:12px;font-weight:500;color:var(--ink-2);
+  background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:5px 12px;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:6px;transition:.12s}
+.chtabs button:hover{border-color:var(--accent)}
+.chtabs button[aria-selected="true"]{color:#fff;background:var(--accent);border-color:var(--accent)}
+.chtabs button .lv{width:6px;height:6px;border-radius:50%;background:var(--bj)}
+.chtabs button[aria-selected="true"] .lv{background:#fff}
+.chtabs button .vc{font-family:"IBM Plex Mono",monospace;font-size:10px;opacity:.75}
+
+/* control strip */
+.ctrls{display:flex;flex-wrap:wrap;gap:6px;padding:9px 12px;border-bottom:1px solid var(--line-2);background:var(--panel)}
+.tog{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;color:var(--ink-2);
+  background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:5px 9px;transition:.12s}
+.tog .dot{width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
+.tog[aria-pressed="true"]{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--accent-soft)}
+.tog[aria-pressed="true"] .dot{background:var(--accent)}
+.tog.danger[aria-pressed="true"]{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 45%,var(--line));background:color-mix(in srgb,var(--crit) 12%,transparent)}
+.tog.danger[aria-pressed="true"] .dot{background:var(--crit)}
+
+/* notice */
+.notice{display:flex;gap:9px;align-items:center;padding:9px 14px;background:color-mix(in srgb,var(--accent) 9%,var(--panel));
+  border-bottom:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}
+.notice.empty{background:var(--panel-2);color:var(--ink-3)}
+.notice .pin{font-size:13px;flex:0 0 auto}
+.notice b{color:var(--ink)}
+.notice .ntext{flex:1;min-width:0}
+.notice .x{margin-left:auto;background:none;border:none;color:var(--ink-3);font-size:14px;padding:0 3px;flex:0 0 auto}
+.notice .x:hover{color:var(--crit)}
+.notice .add{background:none;border:none;color:var(--accent);font-weight:600;font-size:12.5px;cursor:pointer;padding:2px 0}
+.notice .nedit{flex:1;min-width:0;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:7px;height:29px;padding:0 9px;font-family:inherit;font-size:12.5px}
+.notice .nbtn{background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:600;padding:5px 10px;flex:0 0 auto}
+.notice .nbtn.ghost{background:none;color:var(--ink-3);border:1px solid var(--line)}
+
+/* message list */
+.list{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:2px;scroll-behavior:smooth;
+  font-size:var(--cfont)}
+.list::-webkit-scrollbar{width:8px}.list::-webkit-scrollbar-thumb{background:var(--panel-3);border-radius:8px}
+.msg{padding:3px 7px;border-radius:8px;position:relative;word-break:break-word;line-height:1.45}
+.msg:hover{background:var(--panel-2)}
+.msg .bdg{display:inline-block;font-size:.62em;font-family:"IBM Plex Mono",monospace;font-weight:600;
+  padding:1px 5px;border-radius:5px;margin-right:4px;color:#fff;vertical-align:middle;transform:translateY(-1px)}
+.bj{background:var(--bj)}.mgr{background:var(--mgr)}.sub{background:var(--sub)}.fan{background:var(--fan);color:#2a1f00}.sup{background:var(--sup);color:#04231d}
+.msg .nk{font-weight:600}
+.msg .tx{color:var(--ink-2)}
+.msg .emo{display:inline-block;transform:translateY(1px);font-size:1.15em}
+.msg.mine{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.msg.blinded .tx{display:none}
+.msg .blindnote{display:none;color:var(--blind);font-style:italic;font-size:.86em}
+.msg.blinded .blindnote{display:inline}
+.msg .reveal{display:none;margin-left:6px;font-size:.78em;background:var(--blind-bg);border:1px solid var(--line);
+  color:var(--ink-2);border-radius:6px;padding:1px 7px}
+.msg.blinded .reveal{display:inline-block}
+.msg.revealed .tx{display:inline}.msg.revealed .blindnote,.msg.revealed .reveal{display:none}
+.msg.gone{opacity:.5}
+.msg.gone .tx,.msg.gone .bdg,.msg.gone .nk{text-decoration:line-through;color:var(--ink-3)}
+.modbtns{display:none;position:absolute;right:6px;top:2px;gap:4px}
+body.modon .msg:hover .modbtns{display:flex}
+.modbtns button{font-size:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);
+  border-radius:6px;padding:2px 7px}
+.modbtns button:hover{border-color:var(--crit);color:var(--crit)}
+
+/* system + donation lines */
+.sys{align-self:center;font-size:11.5px;color:var(--sys);font-family:"IBM Plex Mono",monospace;
+  background:var(--sys-bg);border-radius:20px;padding:3px 12px;margin:2px 0;text-align:center;max-width:92%}
+.dono{align-self:stretch;border-radius:11px;padding:10px 12px;margin:4px 0;color:#04120f;box-shadow:var(--shadow);
+  background:linear-gradient(100deg,var(--don-a),#0a9c80)}
+.dono.t2{background:linear-gradient(100deg,var(--don-b),#3644c8);color:#fff}
+.dono.t3{background:linear-gradient(100deg,var(--don-c),#6b3fe0);color:#fff}
+.dono.t4{background:linear-gradient(100deg,var(--don-d),#c77400);color:#2a1f00}
+.dono .h{display:flex;justify-content:space-between;align-items:center;font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:14px}
+.dono .h .amt{display:flex;align-items:center;gap:5px}
+.dono .h .k{font-size:9px;background:rgba(255,255,255,.28);padding:2px 7px;border-radius:20px;letter-spacing:.04em}
+.dono .m{font-size:13px;margin-top:5px;opacity:.94}
+
+/* new-msg preview bar (scroll-up live preview, 치지직 스타일) */
+.anchor{position:absolute;left:8px;right:8px;bottom:8px;display:none;align-items:center;gap:9px;width:auto;
+  background:var(--panel-3);color:var(--ink);border:1px solid var(--line);border-radius:11px;
+  padding:7px 9px 7px 11px;box-shadow:var(--shadow);font-size:12.5px;text-align:left;
+  animation:slideup .16s ease-out}
+@keyframes slideup{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.anchor{animation:none}}
+.anchor.show{display:flex}
+.anchor .pv{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2);line-height:1.4}
+.anchor .pv .nk{font-weight:600}
+.anchor .pv .emo{font-size:1.05em}
+.anchor .cnt{flex:0 0 auto;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;color:#fff;
+  background:var(--accent);border-radius:20px;padding:1px 7px;display:none}
+.anchor .cnt.show{display:inline-block}
+.anchor .chev{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;
+  display:grid;place-items:center;font-size:11px}
+
+/* input */
+.input{border-top:1px solid var(--line-2);padding:10px 12px;background:var(--panel);display:flex;flex-direction:column;gap:8px}
+.gate{font-size:12px;color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:8px;padding:7px 10px;display:none}
+.gate.show{display:block}
+.emorow{display:none;flex-wrap:wrap;gap:4px}
+.emorow.show{display:flex}
+.emorow button{font-size:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;width:34px;height:34px;line-height:1}
+.ibox{display:flex;gap:7px;align-items:center}
+.ibox .ib{width:32px;height:36px;flex:0 0 auto;border:1px solid var(--line);background:var(--panel-2);border-radius:9px;
+  font-size:16px;color:var(--ink-2);display:grid;place-items:center}
+.ibox input{flex:1;min-width:0;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);
+  border-radius:9px;padding:0 12px;height:36px;font-size:14px;font-family:inherit}
+.ibox input:disabled{opacity:.55}
+.ibox .send{background:var(--accent);color:#fff;border:none;border-radius:9px;height:36px;padding:0 15px;font-weight:600;font-size:13px}
+.ibox .send:disabled{background:var(--panel-3);color:var(--ink-3)}
+.subrow{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink-3)}
+.subrow select{font-family:inherit;font-size:11px;background:var(--panel-2);color:var(--ink-2);border:1px solid var(--line);border-radius:7px;padding:3px 6px}
+
+/* ---------- side: guide ---------- */
+.side{display:flex;flex-direction:column;gap:16px}
+.gcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.gcard h3{margin:0 0 4px;font-size:14px;display:flex;align-items:center;gap:8px}
+.gcard h3 .n{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--accent);background:var(--accent-soft);
+  border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:6px;padding:2px 7px}
+.gcard p{margin:6px 0 0;font-size:12.5px;color:var(--ink-2)}
+.tryrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.tryrow button{font-size:11.5px;font-weight:500;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);
+  border-radius:8px;padding:6px 10px}
+.tryrow button:hover{border-color:var(--accent);color:var(--accent)}
+.tryrow button.warn:hover{border-color:var(--crit);color:var(--crit)}
+.maps{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.maps .m{display:grid;grid-template-columns:auto 1fr;gap:9px;font-size:12px;color:var(--ink-2);align-items:baseline}
+.maps .m .k{font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:600;color:var(--accent);
+  background:var(--accent-soft);border-radius:5px;padding:2px 6px;white-space:nowrap}
+.maps .m b{color:var(--ink)}
+.foot{grid-column:1/-1;text-align:center;color:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-size:11px;margin-top:4px}
+.theme{background:none;border:1px solid var(--line);color:var(--ink-2);border-radius:8px;font-size:11px;padding:5px 10px}
+
+/* chat pop-out (새 창 분리) */
+.popout[hidden],.placeholder[hidden]{display:none!important}
+.placeholder{height:76vh;min-height:520px;border:1px dashed var(--line);border-radius:var(--radius);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;
+  color:var(--ink-3);background:var(--panel-2);padding:24px}
+.placeholder .big{font-size:38px}
+.placeholder b{color:var(--ink)}
+.placeholder button{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:8px 16px;font-weight:600;font-size:13px}
+.popout{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:200;
+  width:min(380px,calc(100vw - 24px));height:min(70vh,600px);min-height:360px;
+  display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 24px 64px rgba(0,0,0,.45);overflow:hidden;resize:both}
+.popout .titlebar{display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--panel-3);
+  border-bottom:1px solid var(--line);cursor:move;user-select:none;flex:0 0 auto}
+.popout .titlebar b{font-size:12.5px}
+.popout .titlebar .sp{margin-left:auto;display:flex;gap:6px}
+.popout .titlebar button{border:1px solid var(--line);background:var(--panel);color:var(--ink-2);border-radius:6px;
+  width:26px;height:24px;font-size:12px;line-height:1}
+.popout .titlebar button:hover{color:var(--ink);border-color:var(--accent)}
+.popout .popbody{flex:1;min-height:0;display:flex}
+.popout .popbody .chat{height:100%!important;flex:1;border:none;border-radius:0;box-shadow:none;min-height:0}
+.popout.min{height:auto!important;min-height:0;resize:none}
+.popout.min .popbody{display:none}
+</style>
+
+<div class="wrap">
+  <div class="masthead">
+    <h1>라이브 채팅 프로토타입</h1>
+    <span class="tag">치지직 · 숲 명세 기반 데모</span>
+    <button class="theme" id="themeBtn" type="button">🌓 테마</button>
+    <button class="theme" id="popBtn" type="button">⧉ 채팅 팝업</button>
+    <p>명세서·로드맵의 채팅 기능을 실제로 동작시키는 샘플 UI입니다. 상단 토글과 오른쪽 “체험” 버튼으로 클린봇·후원·저속모드·모더레이션을 직접 확인하세요.</p>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div class="chatcell" id="chatcell">
+  <div class="chat" id="chat">
+    <div class="chtabs" id="chtabs" role="tablist" aria-label="채팅 채널"></div>
+    <div class="top">
+      <div class="av"></div>
+      <div class="who"><b id="chName">데모 스트리머</b><span class="st" id="chSub">짧은 종겜 · 종합게임</span></div>
+      <div class="live"><span class="d"></span>LIVE<span class="cnt mono" id="viewers">1,284</span></div>
+    </div>
+
+    <div class="ctrls">
+      <button class="tog" id="tCleanbot" aria-pressed="true" type="button"><span class="dot"></span>클린봇</button>
+      <button class="tog" id="tSlow" aria-pressed="false" type="button"><span class="dot"></span>저속모드</button>
+      <button class="tog" id="tFreeze" aria-pressed="false" type="button"><span class="dot"></span>채팅 얼리기</button>
+      <button class="tog danger" id="tMod" aria-pressed="false" type="button"><span class="dot"></span>매니저 모드</button>
+      <button class="tog" id="tSize" aria-pressed="false" type="button"><span class="dot"></span>글자 크게</button>
+    </div>
+
+    <div class="notice" id="notice"></div>
+
+    <div style="position:relative;flex:1;display:flex;min-height:0">
+      <div class="list" id="list" aria-live="polite"></div>
+      <button class="anchor" id="anchor" type="button" aria-label="최신 채팅으로 이동">
+        <span class="cnt" id="anchorCnt"></span>
+        <span class="pv" id="anchorPv"></span>
+        <span class="chev">▼</span>
+      </button>
+    </div>
+
+    <div class="input">
+      <div class="gate" id="gate"></div>
+      <div class="emorow" id="emorow"></div>
+      <div class="ibox">
+        <button class="ib" id="emoBtn" type="button" aria-label="이모티콘">😀</button>
+        <button class="ib" id="donoBtn" type="button" aria-label="후원" title="별풍선/치즈 후원">🎈</button>
+        <input id="msgIn" maxlength="100" placeholder="채팅 입력 (c)" autocomplete="off">
+        <button class="send" id="sendBtn" type="button">보내기</button>
+      </div>
+      <div class="subrow">
+        <span>내 등급 <select id="grade">
+          <option value="1">일반</option>
+          <option value="2">팔로워</option>
+          <option value="3">구독팬</option>
+          <option value="9">매니저</option>
+        </select></span>
+        <span id="hint" class="mono">클린봇 ON · 저속 OFF</span>
+      </div>
+    </div>
+  </div>
+    <div class="placeholder" id="ph" hidden>
+      <div class="big">🗔</div>
+      <div><b>채팅이 팝업으로 분리되었습니다</b><br><span style="font-size:12px">오른쪽 플로팅 창에서 계속 채팅할 수 있어요</span></div>
+      <button id="restoreBtn" type="button">채팅 되돌리기</button>
+    </div>
+  </div>
+
+  <!-- SIDE GUIDE -->
+  <div class="side">
+    <div class="gcard">
+      <h3><span class="n">DEMO</span> 이렇게 체험하세요</h3>
+      <p>버튼을 누르면 실제 채팅에 이벤트가 발생합니다. 클린봇 판정은 클라이언트에서 진짜로 실행됩니다(정규화+사전+스팸). <b>매니저 모드</b>를 켜면 상단에서 <b>공지를 등록·수정</b>하거나, 채팅 위에 마우스를 올려 <b>“공지”로 고정</b>할 수 있어요.</p>
+      <div class="tryrow">
+        <button id="bDono" type="button">🎈 후원 보내기</button>
+        <button id="bBig" type="button">💎 대형 후원</button>
+        <button id="bSub" type="button">⭐ 구독 발생</button>
+        <button class="warn" id="bBad" type="button">🧹 비속어(데모)</button>
+        <button class="warn" id="bSpam" type="button">🔁 도배 시뮬</button>
+        <button class="warn" id="bAd" type="button">📢 광고/연락처</button>
+      </div>
+    </div>
+
+    <div class="gcard">
+      <h3><span class="n">FR</span> 구현된 명세 요건</h3>
+      <div class="maps">
+        <div class="m"><span class="k">CH</span><span><b>채널</b> 상단 탭으로 투네이션·치지직·유튜브 전환 (플랫폼별 독립 채팅·공지·후원 재화)</span></div>
+        <div class="m"><span class="k">DISP</span><span><b>표시</b> 뱃지·닉색·이모티콘, 자동 스크롤/스크롤업 최신 미리보기, 고정 공지</span></div>
+        <div class="m"><span class="k">SEND</span><span><b>전송</b> 입력·글자수(100)·저속모드 카운트다운·차단 사유</span></div>
+        <div class="m"><span class="k">DONO</span><span><b>후원</b> 별풍선/치즈 금액대별 색상 카드(4단계)</span></div>
+        <div class="m"><span class="k">MOD</span><span><b>모더레이션</b> 공지 등록/고정, 클린봇 L1·L2, 삭제/타임아웃, 얼리기, 등급 게이트</span></div>
+        <div class="m"><span class="k">BOT</span><span><b>클린봇</b> 정규화·자모 사전 매칭 + 도배/광고 탐지 → 블라인드(개인 보기)</span></div>
+      </div>
+      <p style="margin-top:11px">근거 문서: chzzk-chat-spec · sooplive-chat-spec · chat-service-roadmap</p>
+    </div>
+  </div>
+
+  <div class="foot">라이브 채팅 프로토타입 · 데모용 샘플 UI · 비속어는 무해한 데모 토큰입니다</div>
+</div>
+
+<div class="popout" id="popout" hidden>
+  <div class="titlebar" id="popbar">
+    <span>💬</span><b>채팅 팝업</b>
+    <span class="sp">
+      <button id="popMin" type="button" title="접기">─</button>
+      <button id="popClose" type="button" title="닫기(되돌리기)">✕</button>
+    </span>
+  </div>
+  <div class="popbody" id="popbody"></div>
+</div>
+
+<script>
+"use strict";
+/* ---------- state ---------- */
+var S = { cleanbot:true, slow:false, freeze:false, mod:false, big:false, cool:0, atBottom:true, grade:1 };
+var recent = {}; // userId -> [{t, norm}]
+var list = document.getElementById('list');
+var anchor = document.getElementById('anchor');
+
+/* ---------- cleanbot: normalize + jamo + dict + spam ---------- */
+var BAN = ['바보','멍청이','꺼져','도배'];              // 데모용 무해 토큰
+var ALLOW = ['바보사랑'];                               // 예외어(오탐 방지 데모)
+var LEET = {'1':'ㅣ','!':'ㅣ','0':'ㅇ','@':'ㅏ'};
+function normalize(raw){
+  var s = raw.normalize('NFKC').toLowerCase();
+  s = s.replace(/[10!@]/g, function(c){ return LEET[c]||c; });
+  s = s.replace(/[\s.,_\-*~^:;'"`!?()\[\]{}<>@#$%&+=/\\|]/g,'');
+  s = s.replace(/(.)\1{2,}/g,'$1$1');
+  return s;
+}
+var CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ', JU='ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ',
+    JO='_ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ';
+function toJamo(s){
+  var out='';
+  for(var i=0;i<s.length;i++){
+    var c=s.charCodeAt(i)-0xAC00;
+    if(c>=0&&c<=11171){ out+=CHO[Math.floor(c/588)]+JU[Math.floor((c%588)/28)]+JO[c%28]; }
+    else out+=s[i];
+  }
+  return out.replace(/_/g,'');
+}
+var banNorm = BAN.map(normalize);
+var banJamo = BAN.map(function(w){return toJamo(normalize(w));});
+function dictScore(raw){
+  var n=normalize(raw), j=toJamo(n);
+  for(var a=0;a<ALLOW.length;a++){ if(n.indexOf(normalize(ALLOW[a]))>=0) return 0; }
+  for(var i=0;i<banNorm.length;i++){ if(n.indexOf(banNorm[i])>=0) return 100; }
+  for(var k=0;k<banJamo.length;k++){ if(banJamo[k].length>=2 && j.indexOf(banJamo[k])>=0) return 100; }
+  return 0;
+}
+function spamScore(uid, raw){
+  var now=Date.now(), n=normalize(raw), h=recent[uid]||[], sc=0;
+  h=h.filter(function(x){return now-x.t<8000;});
+  var dup=h.filter(function(x){return x.norm===n;}).length;
+  if(dup>=2) sc+=60;
+  if(h.length>=4 && now-h[0].t<3000) sc+=50;
+  if(/(https?:\/\/|www\.|카톡|텔레|010[-\s]?\d{3,4})/i.test(raw)) sc+=40;
+  if(raw.length>8){ var uniq=(new Set(n.split(''))).size/Math.max(n.length,1); if(uniq<0.2) sc+=40; }
+  h.push({t:now,norm:n}); recent[uid]=h.slice(-8);
+  return sc;
+}
+function judge(uid, raw){
+  if(!S.cleanbot) return {act:'pass'};
+  var s = dictScore(raw) + spamScore(uid, raw);
+  if(s>=100) return {act:'blind', why:'욕설/비속어'};
+  if(s>=70)  return {act:'blind', why:'도배·스팸'};
+  if(s>=40)  return {act:'blind', why:'광고/의심'};
+  return {act:'pass'};
+}
+
+/* ---------- rendering ---------- */
+function esc(t){ return t.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+var EMO={ ':하트:':'❤️',':웃음:':'😂',':킹받:':'😡',':사랑:':'🥰',':불:':'🔥',':따봉:':'👍',':파티:':'🎉',':눈물:':'😭' };
+function renderText(t){
+  t=esc(t);
+  for(var k in EMO){ t=t.split(k).join('<span class="emo">'+EMO[k]+'</span>'); }
+  return t;
+}
+function nearBottom(){ return list.scrollHeight - list.scrollTop - list.clientHeight < 60; }
+var missed=0, anchorPv=document.getElementById('anchorPv'), anchorCnt=document.getElementById('anchorCnt');
+function scrollEnd(){ list.scrollTop=list.scrollHeight; anchor.classList.remove('show'); S.atBottom=true; missed=0; anchorCnt.classList.remove('show'); }
+/* 스크롤을 위로 올렸을 때: 하단 바에 방금 올라온 최신 채팅을 실시간 미리보기 */
+function bumpPreview(html){
+  anchorPv.innerHTML=html;
+  missed++; if(missed>1){ anchorCnt.textContent='+'+missed; anchorCnt.classList.add('show'); }
+  anchor.classList.add('show');
+}
+
+function addMsg(m){ // {uid,nick,color,badge:[{c,l}],text,mine}
+  var wasBottom = nearBottom();
+  var v = m.mine ? {act:'pass'} : judge(m.uid, m.text);
+  if(m.mine && S.cleanbot){ v = judge('me:'+(m.nick||'me'), m.text); } // 본인도 판정(데모)
+  var el=document.createElement('div');
+  el.className='msg'+(m.mine?' mine':'')+(v.act==='blind'?' blinded':'');
+  var bdg=(m.badge||[]).map(function(b){return '<span class="bdg '+b.c+'">'+b.l+'</span>';}).join('');
+  el.innerHTML = bdg
+    + '<span class="nk" style="color:'+(m.color||'var(--ink)')+'">'+esc(m.nick)+'</span> '
+    + '<span class="tx">'+renderText(m.text)+'</span>'
+    + '<span class="blindnote">클린봇이 가린 메시지 ('+(v.why||'')+')</span>'
+    + '<button class="reveal" type="button">보기</button>'
+    + '<span class="modbtns"><button data-a="pin" type="button">공지</button><button data-a="del" type="button">삭제</button><button data-a="to" type="button">타임아웃</button></span>';
+  el.querySelector('.reveal').addEventListener('click',function(){ el.classList.add('revealed'); });
+  el.querySelector('.modbtns').addEventListener('click',function(e){
+    var a=e.target.getAttribute('data-a');
+    if(a==='del'){ el.classList.add('gone'); }
+    else if(a==='to'){ el.classList.add('gone'); addSys('⛔ '+m.nick+' 님이 타임아웃되었습니다 (60초)'); }
+    else if(a==='pin'){ noticeText=m.nick+': '+m.text; renderNotice(); addSys('📌 채팅이 공지로 등록되었습니다'); }
+  });
+  list.appendChild(el); trim();
+  if(wasBottom||m.mine){ scrollEnd(); }
+  else {
+    var pv = v.act==='blind'
+      ? '<span class="nk">'+esc(m.nick)+'</span> <i>클린봇이 가린 메시지</i>'
+      : '<span class="nk" style="color:'+(m.color||'var(--ink)')+'">'+esc(m.nick)+'</span> '+renderText(m.text);
+    bumpPreview(pv); S.atBottom=false;
+  }
+}
+function addSys(t){ var e=document.createElement('div'); e.className='sys'; e.textContent=t;
+  var wb=nearBottom(); list.appendChild(e); trim(); if(wb) scrollEnd(); else bumpPreview('<i>'+esc(t)+'</i>'); }
+function addDono(nick,kind,amt,text){
+  var wb=nearBottom(); var tier = amt>=10000?'t4':amt>=1000?'t3':amt>=100?'t2':'';
+  var e=document.createElement('div'); e.className='dono '+tier;
+  var unit = kind==='치즈'?'치즈':kind==='슈퍼챗'?'원':kind==='후원'?'원':'개';
+  e.innerHTML='<div class="h"><span class="amt">🎈 '+esc(nick)+'</span><span class="k">'+kind+'</span></div>'
+    +'<div class="h" style="margin-top:3px"><span></span><span>'+amt.toLocaleString()+' '+unit+'</span></div>'
+    +(text?'<div class="m">'+renderText(esc(text))+'</div>':'');
+  list.appendChild(e); trim(); if(wb) scrollEnd(); else bumpPreview('🎈 <span class="nk">'+esc(nick)+'</span> 님의 '+kind+' 후원');
+  bumpViewers(1);
+}
+function trim(){ while(list.children.length>140) list.removeChild(list.firstChild); }
+
+/* ---------- simulation ---------- */
+var USERS=[
+  {uid:'u1',nick:'갈비세끼',color:'var(--bj)',badge:[{c:'sub',l:'29'}]},
+  {uid:'u2',nick:'탱바보',color:'#e0563b',badge:[{c:'sub',l:'24'}]},
+  {uid:'u3',nick:'단골러',color:'#2f8fd0',badge:[{c:'fan',l:'팬'}]},
+  {uid:'u4',nick:'지나가던시청자',color:'#c58a12',badge:[]},
+  {uid:'u5',nick:'서포터짱',color:'var(--sup)',badge:[{c:'sup',l:'서포터'}]},
+  {uid:'u6',nick:'운영진A',color:'#5b9dff',badge:[{c:'mgr',l:'매니저'}]},
+  {uid:'u7',nick:'뉴비님',color:'#8a5cf0',badge:[]},
+  {uid:'u8',nick:'구독자B',color:'#a98bff',badge:[{c:'sub',l:'7'}]}
+];
+var LINES=['ㅋㅋㅋㅋ','가보자고 :불:','이거 개꿀잼','오늘 방송 몇시까지?','핀볼 ㄱㄱ :따봉:','아 방금 아까웠다','ㄷㄷㄷ',
+  '방송 잘 보고 있어요 :하트:','굿굿','이번판 이긴다',':파티: 축하해요','ㅇㅈ','컨디션 좋아보여요','나이스',
+  '오 방금 뭐임 ㅋㅋ','재밌다 진짜','내일도 방송해요?',':웃음::웃음:'];
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+
+/* ---------- channels (본방 / 중계방 / 다른 방송) ---------- */
+var U_TOON=[
+  {uid:'t1',nick:'열혈팬1호',color:'var(--bj)',badge:[{c:'fan',l:'열혈'}]},
+  {uid:'t2',nick:'단골도네',color:'#2f8fd0',badge:[{c:'sup',l:'서포터'}]},
+  {uid:'t3',nick:'응원해요',color:'#c58a12',badge:[]},
+  {uid:'t4',nick:'구독팬A',color:'#a98bff',badge:[{c:'sub',l:'8'}]}
+];
+var L_TOON=['오늘도 화이팅! :불:','방송 잘 보고 있어요 :하트:','후원 갑니다~','ㅋㅋㅋㅋ','컨디션 좋아보여요','굿방굿방 :따봉:','다음 방송 언제예요?',':파티: 축하해요'];
+var U_CHZ=[
+  {uid:'c1',nick:'갈비세끼',color:'var(--bj)',badge:[{c:'sub',l:'29'}]},
+  {uid:'c2',nick:'치즈요정',color:'#2f8fd0',badge:[{c:'sub',l:'12'}]},
+  {uid:'c3',nick:'종겜러',color:'#e0563b',badge:[{c:'fan',l:'팬'}]},
+  {uid:'c4',nick:'눈팅중',color:'#c58a12',badge:[]}
+];
+var L_CHZ=['핀볼 ㄱㄱ :따봉:','와 방금 뭐임 ㅋㅋ','이번판 이긴다','ㄷㄷㄷ','치즈 갑니다','구독 눌렀어요 :하트:','오늘 몇시까지 방송?','가보자고 :불:'];
+var U_YT=[
+  {uid:'y1',nick:'MemberKim',color:'var(--sup)',badge:[{c:'sup',l:'멤버'}]},
+  {uid:'y2',nick:'스트리머팬',color:'#a98bff',badge:[{c:'sub',l:'멤버'}]},
+  {uid:'y3',nick:'gamerlee',color:'#2f8fd0',badge:[]},
+  {uid:'y4',nick:'지나가는1인',color:'#c58a12',badge:[]}
+];
+var L_YT=['LETS GO :불:','ㅋㅋㅋ','first!','GG','오 이거 클립각','슈퍼챗 쏩니다','굿콘텐츠 :따봉:','알림 뜨자마자 왔어요'];
+var CHANNELS=[
+ {id:'toon',name:'투네이션',dono:'후원',amts:[5000,10000,30000],streamer:'데모 크리에이터',sub:'투네이션 통합 채팅',viewers:1284,
+   notice:'후원 이펙트: 5천원 → 인사, 3만원 → 룰렛! 채팅 매너 지켜주세요 🙏',users:U_TOON,lines:L_TOON,
+   seed:[['열혈팬1호','var(--bj)',[{c:'fan',l:'열혈'}],'오늘도 왔습니다 :파티:'],['응원해요','#c58a12',[],'안녕하세요~'],['단골도네','#2f8fd0',[{c:'sup',l:'서포터'}],'후원 준비 완료 :불:']]},
+ {id:'chzzk',name:'치지직',dono:'치즈',amts:[100,1000,5000],streamer:'치지직 스트리머',sub:'치지직 라이브 · 종합게임',viewers:8921,
+   notice:'치즈 후원 이펙트 · 구독하면 전용 이모티콘! 🧀',users:U_CHZ,lines:L_CHZ,
+   seed:[['갈비세끼','var(--bj)',[{c:'sub',l:'29'}],'오 시작한다 :파티:'],['종겜러','#e0563b',[{c:'fan',l:'팬'}],'핀볼 가보자 :불:']]},
+ {id:'youtube',name:'유튜브',dono:'슈퍼챗',amts:[2000,5000,20000],streamer:'Demo Channel',sub:'YouTube Live',viewers:15230,
+   notice:'멤버십 가입하고 전용 뱃지 받아가세요! ▶️',users:U_YT,lines:L_YT,
+   seed:[['MemberKim','var(--sup)',[{c:'sup',l:'멤버'}],'LETS GO :불:'],['gamerlee','#2f8fd0',[],'first ㅋㅋ']]}
+];
+function ch(){ for(var i=0;i<CHANNELS.length;i++){ if(CHANNELS[i].id===S.ch) return CHANNELS[i]; } return CHANNELS[0]; }
+var chtabs=document.getElementById('chtabs');
+function renderTabs(){
+  chtabs.innerHTML='';
+  CHANNELS.forEach(function(c){
+    var b=document.createElement('button'); b.type='button'; b.setAttribute('role','tab');
+    b.setAttribute('aria-selected', c.id===S.ch ? 'true':'false');
+    var vc=(c._viewers!==undefined?c._viewers:c.viewers);
+    b.innerHTML='<span class="lv"></span>'+esc(c.name)+' <span class="vc">'+vc.toLocaleString()+'</span>';
+    b.addEventListener('click',function(){ switchChannel(c.id); });
+    chtabs.appendChild(b);
+  });
+}
+function seedChannel(c){
+  addSys('채팅에 오신 것을 환영합니다 · '+c.name);
+  c.seed.forEach(function(m){ addMsg({uid:c.id+':'+m[0],nick:m[0],color:m[1],badge:m[2],text:m[3]}); });
+}
+function switchChannel(id){
+  if(id===S.ch) return;
+  var cur=ch();
+  cur._frag=document.createDocumentFragment();
+  while(list.firstChild) cur._frag.appendChild(list.firstChild);   // 현재 채널 채팅 보관
+  cur._notice=noticeText;
+  cur._viewers=parseInt(document.getElementById('viewers').textContent.replace(/,/g,''))||cur.viewers;
+  S.ch=id; var nx=ch();
+  if(nx._frag){ list.appendChild(nx._frag); nx._frag=null; }            // 이전 방문 이력 복원
+  else { seedChannel(nx); }                                            // 첫 방문 → 시드
+  noticeText=(nx._notice!==undefined)?nx._notice:nx.notice; noticeEditing=false; renderNotice();
+  document.getElementById('chName').textContent=nx.streamer;
+  document.getElementById('chSub').textContent=nx.sub;
+  document.getElementById('viewers').textContent=((nx._viewers!==undefined)?nx._viewers:nx.viewers).toLocaleString();
+  missed=0; anchorCnt.classList.remove('show'); anchor.classList.remove('show');
+  renderTabs(); scrollEnd();
+}
+var simTimer;
+function simTick(){
+  var c=ch(), u=pick(c.users);
+  addMsg({uid:u.uid,nick:u.nick,color:u.color,badge:u.badge,text:pick(c.lines)});
+  if(Math.random()<0.10) addSys('🔔 '+pick(['하치','머독','키위','단즈'])+Math.floor(Math.random()*99)+' 님이 입장하였습니다');
+  if(Math.random()<0.06) addDono(pick(c.users).nick,c.dono||'후원',pick(c.amts||[10,50,100]),pick(['화이팅!','굿방 감사 :하트:','']));
+  simTimer=setTimeout(simTick, 1400+Math.random()*2200);
+}
+function bumpViewers(n){ var v=document.getElementById('viewers'); var c=parseInt(v.textContent.replace(/,/g,''))+n; v.textContent=c.toLocaleString(); }
+setInterval(function(){ bumpViewers(Math.random()<0.5?1:-1); },4000);
+
+/* ---------- input / gate / slow ---------- */
+var msgIn=document.getElementById('msgIn'), sendBtn=document.getElementById('sendBtn'),
+    gate=document.getElementById('gate'), hint=document.getElementById('hint');
+function updHint(){ hint.textContent='클린봇 '+(S.cleanbot?'ON':'OFF')+' · 저속 '+(S.slow?'ON':'OFF'); }
+function gateReason(){
+  if(S.freeze && S.grade<3) return '❄️ 채팅이 얼려졌습니다. 구독팬 이상만 참여할 수 있어요. (내 등급을 올려보세요)';
+  if(S.cool>0) return '⏳ 저속모드: '+S.cool+'초 후에 다시 보낼 수 있어요.';
+  return '';
+}
+function refreshGate(){
+  var r=gateReason();
+  gate.textContent=r; gate.classList.toggle('show', !!r);
+  var blocked = !!r;
+  msgIn.disabled=blocked; sendBtn.disabled=blocked;
+}
+function send(){
+  var t=msgIn.value.trim(); if(!t) return;
+  if(gateReason()){ refreshGate(); return; }
+  var badge = S.grade>=9?[{c:'mgr',l:'매니저'}] : S.grade>=3?[{c:'sub',l:'3'}] : S.grade>=2?[{c:'fan',l:'팔로워'}]:[];
+  addMsg({uid:'me',nick:'나',color:'var(--accent-2)',badge:badge,text:t,mine:true});
+  msgIn.value='';
+  if(S.slow && S.grade<9){ S.cool=5; refreshGate(); var iv=setInterval(function(){ S.cool--; refreshGate(); if(S.cool<=0) clearInterval(iv); },1000); }
+}
+sendBtn.addEventListener('click',send);
+msgIn.addEventListener('keydown',function(e){ if(e.key==='Enter') send(); });
+document.addEventListener('keydown',function(e){ if(e.key==='c'&&document.activeElement!==msgIn&&!/input|select/i.test(document.activeElement.tagName)){ e.preventDefault(); msgIn.focus(); }});
+document.getElementById('grade').addEventListener('change',function(e){ S.grade=parseInt(e.target.value); refreshGate(); });
+
+/* scroll anchor */
+list.addEventListener('scroll',function(){ if(nearBottom()){ anchor.classList.remove('show'); S.atBottom=true; } });
+anchor.addEventListener('click',scrollEnd);
+
+/* ---------- toggles ---------- */
+function toggle(id,key,after){ var b=document.getElementById(id);
+  b.addEventListener('click',function(){ S[key]=!S[key]; b.setAttribute('aria-pressed',S[key]); if(after)after(); }); }
+toggle('tCleanbot','cleanbot',updHint);
+toggle('tSlow','slow',function(){updHint();refreshGate();});
+toggle('tFreeze','freeze',function(){ refreshGate(); addSys(S.freeze?'❄️ 스트리머가 채팅을 얼렸습니다 (구독팬 이상 참여)':'☀️ 채팅 얼리기가 해제되었습니다'); });
+toggle('tMod','mod',function(){ document.body.classList.toggle('modon',S.mod); renderNotice(); addSys(S.mod?'🛡️ 매니저 모드 ON — 공지 등록·메시지 관리 가능':'매니저 모드 OFF'); });
+document.getElementById('tSize').addEventListener('click',function(){ S.big=!S.big; this.setAttribute('aria-pressed',S.big);
+  document.documentElement.style.setProperty('--cfont', S.big?'17px':'15px'); });
+/* ---------- 공지사항 등록/수정 (매니저 모드) ---------- */
+var noticeEl=document.getElementById('notice');
+var noticeText='후원 이펙트: 별 10개 → 인사, 50개 → 룰렛. 채팅 매너 지켜주세요 🙏';
+var noticeEditing=false;
+function renderNotice(){
+  noticeEl.hidden=false;
+  if(noticeEditing){
+    noticeEl.className='notice';
+    noticeEl.innerHTML='<span class="pin">📢</span>'
+      +'<input class="nedit" id="nedit" maxlength="120" placeholder="공지 내용을 입력하세요">'
+      +'<button class="nbtn" data-a="save" type="button">등록</button>'
+      +'<button class="nbtn ghost" data-a="cancel" type="button">취소</button>';
+    var inp=noticeEl.querySelector('#nedit'); inp.value=noticeText;
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ saveNotice(); } else if(e.key==='Escape'){ noticeEditing=false; renderNotice(); } });
+    setTimeout(function(){ inp.focus(); },0);
+    return;
+  }
+  if(noticeText){
+    noticeEl.className='notice';
+    noticeEl.innerHTML='<span class="pin">📢</span><div class="ntext"><b>공지</b> · '+renderText(esc(noticeText))+'</div>'
+      +(S.mod?'<button class="x" data-a="edit" type="button" title="공지 수정">✏️</button><button class="x" data-a="remove" type="button" title="공지 삭제">✕</button>':'');
+  } else if(S.mod){
+    noticeEl.className='notice empty';
+    noticeEl.innerHTML='<span class="pin">📢</span><button class="add" data-a="new" type="button">➕ 공지 등록</button>';
+  } else { noticeEl.hidden=true; noticeEl.innerHTML=''; }
+}
+function saveNotice(){ var inp=noticeEl.querySelector('#nedit'); noticeText=inp?inp.value.trim():noticeText; noticeEditing=false; renderNotice(); if(noticeText) addSys('📢 공지가 등록되었습니다'); }
+noticeEl.addEventListener('click',function(e){
+  var a=e.target.getAttribute('data-a'); if(!a) return;
+  if(a==='edit'||a==='new'){ noticeEditing=true; renderNotice(); }
+  else if(a==='remove'){ noticeText=''; renderNotice(); addSys('공지가 삭제되었습니다'); }
+  else if(a==='save'){ saveNotice(); }
+  else if(a==='cancel'){ noticeEditing=false; renderNotice(); }
+});
+
+/* ---------- emote picker ---------- */
+var emorow=document.getElementById('emorow');
+Object.keys(EMO).forEach(function(k){ var b=document.createElement('button'); b.type='button'; b.textContent=EMO[k];
+  b.addEventListener('click',function(){ msgIn.value+=k; msgIn.focus(); }); emorow.appendChild(b); });
+document.getElementById('emoBtn').addEventListener('click',function(){ emorow.classList.toggle('show'); });
+
+/* ---------- donation from input (sandbox-safe, no prompt) ---------- */
+var donoAmts=[100,300,1000,5000], donoIdx=0;
+document.getElementById('donoBtn').addEventListener('click',function(){
+  var amt=donoAmts[donoIdx%donoAmts.length]; donoIdx++;
+  var msg=msgIn.value.trim()||'오늘도 화이팅! :불:';
+  addDono('나',(amt>=1000?'치즈':'별풍선'),amt,msg); msgIn.value=''; scrollEnd();
+});
+
+/* ---------- try buttons ---------- */
+document.getElementById('bDono').addEventListener('click',function(){ addDono('후원러'+Math.floor(Math.random()*99),'별풍선',pick([50,100,300]),pick(['굿방 :하트:','오늘도 화이팅!','재밌어요 ㅋㅋ'])); scrollEnd(); });
+document.getElementById('bBig').addEventListener('click',function(){ addDono('큰손팬','치즈',pick([1000,5000,10000]),'대박 방송 감사합니다 :파티::불:'); scrollEnd(); });
+document.getElementById('bSub').addEventListener('click',function(){ addSys('💜 새콤달콤 님이 3개월 구독했습니다!'); addMsg({uid:'sub'+Date.now(),nick:'새콤달콤',color:'var(--sub)',badge:[{c:'sub',l:'3'}],text:'구독 박았습니다 :하트:'}); scrollEnd(); });
+document.getElementById('bBad').addEventListener('click',function(){ addMsg({uid:'troll'+Math.random(),nick:'분탕러',color:'#e0563b',badge:[],text:pick(['이 바 보 야','ㅁㅊ 멍.청.이','바1보 ㅋㅋ'])}); scrollEnd(); });
+document.getElementById('bSpam').addEventListener('click',function(){ for(var i=0;i<4;i++){ (function(){ addMsg({uid:'spammer',nick:'도배봇',color:'#8a94a4',badge:[],text:'도배도배도배도배도배'}); })(); } scrollEnd(); });
+document.getElementById('bAd').addEventListener('click',function(){ addMsg({uid:'ad'+Math.random(),nick:'광고계정',color:'#8a94a4',badge:[],text:'★수익보장★ 카톡 abc123 지금 연락 010-1234-5678'}); scrollEnd(); });
+
+/* ---------- theme toggle ---------- */
+document.getElementById('themeBtn').addEventListener('click',function(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var dark = cur ? cur==='dark' : matchMedia('(prefers-color-scheme:dark)').matches;
+  document.documentElement.setAttribute('data-theme', dark?'light':'dark');
+});
+
+/* ---------- 채팅 팝업(새 창 분리) ---------- */
+var popout=document.getElementById('popout'), popbody=document.getElementById('popbody'),
+    chatEl=document.getElementById('chat'), chatcell=document.getElementById('chatcell'),
+    ph=document.getElementById('ph'), popBtn=document.getElementById('popBtn'), popped=false;
+function popOut(){ if(popped) return; popbody.appendChild(chatEl); popout.hidden=false; ph.hidden=false;
+  popBtn.textContent='⧉ 팝업 닫기'; popped=true; scrollEnd(); }
+function popIn(){ if(!popped) return; chatcell.insertBefore(chatEl, ph); popout.hidden=true; ph.hidden=true;
+  popout.classList.remove('min'); popBtn.textContent='⧉ 채팅 팝업'; popped=false; scrollEnd(); }
+popBtn.addEventListener('click',function(){ popped?popIn():popOut(); });
+document.getElementById('restoreBtn').addEventListener('click',popIn);
+document.getElementById('popClose').addEventListener('click',popIn);
+document.getElementById('popMin').addEventListener('click',function(){ popout.classList.toggle('min'); });
+(function(){ /* 타이틀바 드래그 이동 */
+  var bar=document.getElementById('popbar'), on=false, sx,sy,ox,oy;
+  function down(e){ if(e.target.closest('button')) return; on=true; var p=e.touches?e.touches[0]:e;
+    sx=p.clientX; sy=p.clientY; var r=popout.getBoundingClientRect(); ox=r.left; oy=r.top;
+    popout.style.transform='none'; popout.style.left=ox+'px'; popout.style.top=oy+'px'; e.preventDefault(); }
+  function move(e){ if(!on) return; var p=e.touches?e.touches[0]:e;
+    var nx=Math.max(6,Math.min(ox+(p.clientX-sx),innerWidth-80)), ny=Math.max(6,Math.min(oy+(p.clientY-sy),innerHeight-40));
+    popout.style.left=nx+'px'; popout.style.top=ny+'px'; }
+  function up(){ on=false; }
+  bar.addEventListener('mousedown',down); addEventListener('mousemove',move); addEventListener('mouseup',up);
+  bar.addEventListener('touchstart',down,{passive:false}); addEventListener('touchmove',move,{passive:false}); addEventListener('touchend',up);
+})();
+
+/* ---------- boot ---------- */
+S.ch=CHANNELS[0].id;
+document.getElementById('chName').textContent=CHANNELS[0].streamer;
+document.getElementById('chSub').textContent=CHANNELS[0].sub;
+document.getElementById('viewers').textContent=CHANNELS[0].viewers.toLocaleString();
+noticeText=CHANNELS[0].notice;
+renderTabs(); seedChannel(CHANNELS[0]);
+renderNotice(); updHint(); refreshGate(); scrollEnd(); simTick();
+</script>
