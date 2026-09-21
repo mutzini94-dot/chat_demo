@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<title>Chat Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f5f7fa; --surface:#ffffff; --surface-2:#eef1f6;
+  --ink:#141922; --ink-2:#525c6b; --ink-3:#7c8697;
+  --line:#dde2ea; --line-2:#e9edf3;
+  --accent:#4655e6; --accent-ink:#2a36c0; --accent-2:#6b7bff; --accent-soft:#eaecfc;
+  --shadow:0 1px 2px rgba(20,25,34,.05),0 10px 30px rgba(20,25,34,.08);
+  --shadow-lg:0 2px 6px rgba(20,25,34,.06),0 20px 48px rgba(20,25,34,.10);
+  --radius:16px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1017; --surface:#151a24; --surface-2:#1c2230;
+  --ink:#e7ecf5; --ink-2:#9aa5b8; --ink-3:#6b7688;
+  --line:#252d3d; --line-2:#181e29;
+  --accent:#6b7bff; --accent-ink:#aeb8ff; --accent-2:#8390ff; --accent-soft:#171f3d;
+  --shadow:0 1px 2px rgba(0,0,0,.34),0 10px 28px rgba(0,0,0,.4);
+  --shadow-lg:0 2px 8px rgba(0,0,0,.4),0 24px 56px rgba(0,0,0,.5);
+}}
+:root[data-theme="dark"]{
+  --bg:#0d1017; --surface:#151a24; --surface-2:#1c2230;
+  --ink:#e7ecf5; --ink-2:#9aa5b8; --ink-3:#6b7688;
+  --line:#252d3d; --line-2:#181e29;
+  --accent:#6b7bff; --accent-ink:#aeb8ff; --accent-2:#8390ff; --accent-soft:#171f3d;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
+  font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding-block:56px 72px;padding-inline:20px}
+.mono{font-family:"IBM Plex Mono",monospace}
+a{color:var(--accent-2)}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:"IBM Plex Mono",monospace;font-size:12px;
+  font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent-2)}
+h1{font-size:clamp(32px,6vw,50px);line-height:1.05;letter-spacing:-.03em;margin:16px 0 0;font-weight:700}
+.sub{color:var(--ink-2);font-size:clamp(15px,2.2vw,18px);max-width:60ch;margin:14px 0 0}
+.hero{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-lg);
+  padding:26px;margin-top:32px;display:flex;flex-wrap:wrap;align-items:center;gap:18px}
+.hero .t{flex:1;min-width:220px}
+.hero h2{margin:0;font-size:20px}
+.hero p{margin:6px 0 0;color:var(--ink-2);font-size:14px}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;text-decoration:none;
+  font-weight:600;font-size:15px;padding:13px 22px;border-radius:12px;box-shadow:var(--shadow);white-space:nowrap}
+.cta:hover{background:var(--accent-ink)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.card{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:18px;box-shadow:var(--shadow);transition:.14s}
+.card:hover{border-color:var(--accent-2);transform:translateY(-2px)}
+.card .k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink)}
+.card h3{margin:8px 0 4px;font-size:15.5px}
+.card p{margin:0;font-size:13px;color:var(--ink-2)}
+.feats{display:flex;flex-wrap:wrap;gap:7px;margin-top:26px}
+.feats span{font-family:"IBM Plex Mono",monospace;font-size:11.5px;background:var(--surface-2);
+  border:1px solid var(--line);border-radius:20px;padding:4px 11px;color:var(--ink-2)}
+footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line-2);color:var(--ink-3);
+  font-family:"IBM Plex Mono",monospace;font-size:12px}
+footer a{color:var(--ink-3)}
+</style>
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>Live Chat · Prototype &amp; Spec</div>
+  <h1>Chat Demo</h1>
+  <p class="sub">치지직(CHZZK)·숲(SOOP) 라이브 채팅을 분석해 자체 스트리밍/후원 서비스용으로 재구성한 <b>인터랙티브 프로토타입 &amp; 기능 명세</b> 모음입니다.</p>
+
+  <div class="hero">
+    <div class="t">
+      <h2>🗨️ 라이브 채팅 프로토타입</h2>
+      <p>클린봇·후원·저속모드·모더레이션·공지 등록·채널 전환·채팅 팝업이 실제로 동작하는 데모.</p>
+    </div>
+    <a class="cta" href="chat-ui-prototype.html">프로토타입 열기 →</a>
+  </div>
+
+  <div class="feats">
+    <span>채널 전환(투네이션·치지직·유튜브)</span>
+    <span>클린봇(정규화·사전·스팸)</span>
+    <span>후원 4단계 카드</span>
+    <span>공지 등록·고정</span>
+    <span>저속모드</span>
+    <span>스크롤업 미리보기</span>
+    <span>채팅 팝업</span>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="chzzk-chat-spec.html"><div class="k">SPEC</div><h3>치지직 채팅 명세</h3><p>치지직 라이브 채팅 기능 상세 요건 명세서</p></a>
+    <a class="card" href="sooplive-chat-spec.html"><div class="k">SPEC</div><h3>숲(SOOP) 채팅 명세</h3><p>실측 기반 SOOP 채팅 기능 상세 요건 명세서</p></a>
+    <a class="card" href="chat-service-roadmap.html"><div class="k">ROADMAP</div><h3>서비스 로드맵</h3><p>자체 채팅 서비스 기능 로드맵 (MVP → 확장)</p></a>
+  </div>
+
+  <footer>
+    mutzini94-dot/chat_demo · <a href="https://github.com/mutzini94-dot/chat_demo">GitHub</a><br>
+    🤖 Generated with Claude Code
+  </footer>
+</div>
