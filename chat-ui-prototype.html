@@ -77,6 +77,10 @@ button{font-family:inherit;cursor:pointer}
 @keyframes pp{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--bj) 60%,transparent)}70%{box-shadow:0 0 0 6px transparent}}
 @media(prefers-reduced-motion:reduce){.chat .top .live .d{animation:none}}
 .chat .top .cnt{margin-left:8px;color:var(--ink-3)}
+.hdr-ctrl{flex:0 0 auto;margin-left:10px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink-2);font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.hdr-ctrl:hover{border-color:var(--accent);color:var(--accent)}
+.hdr-ctrl[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent)}
 
 /* channel tabs */
 .chtabs{display:flex;gap:5px;padding:8px 10px;border-bottom:1px solid var(--line-2);background:var(--panel-2);overflow-x:auto}
@@ -404,11 +408,7 @@ body.modon .tools .mo{display:inline-block}
       <div class="av"></div>
       <div class="who"><b id="chName">데모 스트리머</b><span class="st" id="chSub">짧은 종겜 · 종합게임</span></div>
       <div class="live"><span class="d"></span>LIVE<span class="cnt mono" id="viewers">1,284</span></div>
-    </div>
-
-    <div class="ctrls">
-      <button class="ctrl-open" id="ctrlBtn" type="button" aria-haspopup="true" aria-expanded="false"><span class="tdots">⋮</span> 운영·설정</button>
-      <span class="ctrl-sum mono" id="ctrlSum"></span>
+      <button class="hdr-ctrl" id="ctrlBtn" type="button" aria-haspopup="true" aria-expanded="false" title="운영·설정" aria-label="운영·설정">⋮</button>
     </div>
 
     <div class="notice" id="notice"></div>
@@ -440,7 +440,6 @@ body.modon .tools .mo{display:inline-block}
           <option value="3">구독팬</option>
           <option value="9">매니저</option>
         </select></span>
-        <span id="hint" class="mono">클린봇 ON · 저속 OFF</span>
       </div>
     </div>
   </div>
@@ -765,12 +764,7 @@ setInterval(function(){ bumpViewers(Math.random()<0.5?1:-1); },4000);
 /* ---------- input / gate / slow ---------- */
 var msgIn=document.getElementById('msgIn'), sendBtn=document.getElementById('sendBtn'),
     gate=document.getElementById('gate'), hint=document.getElementById('hint');
-function updHint(){
-  var t='클린봇 '+(S.cleanbot?('ON·'+{low:'약',mid:'중',high:'강'}[S.cbLevel]):'OFF')+' · 저속 '+(S.slow?S.slowSec+'초':'OFF');
-  hint.textContent=t;
-  var cs=document.getElementById('ctrlSum');
-  if(cs){ var flags=[]; if(S.mod) flags.push('매니저'); if(S.freeze) flags.push('얼리기'); cs.textContent=t+(flags.length?' · '+flags.join('·'):''); }
-}
+function updHint(){ /* 현재 세팅값 노출 제거 — 상태 텍스트 미표시 */ }
 function gateReason(){
   if(S.freeze && S.grade<3) return '❄️ 채팅이 얼려졌습니다. 구독팬 이상만 참여할 수 있어요. (내 등급을 올려보세요)';
   if(S.cool>0) return '⏳ 저속모드: '+S.cool+'초 후에 다시 보낼 수 있어요.';
