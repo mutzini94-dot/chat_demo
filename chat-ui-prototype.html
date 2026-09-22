@@ -91,7 +91,22 @@ button{font-family:inherit;cursor:pointer}
 .chtabs button .vc{font-family:"IBM Plex Mono",monospace;font-size:10px;opacity:.75}
 
 /* control strip */
-.ctrls{display:flex;flex-wrap:wrap;gap:6px;padding:9px 12px;border-bottom:1px solid var(--line-2);background:var(--panel)}
+.ctrls{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line-2);background:var(--panel)}
+.ctrl-open{display:inline-flex;align-items:center;gap:7px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);
+  background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:6px 12px;cursor:pointer}
+.ctrl-open:hover{border-color:var(--accent)}
+.ctrl-open .tdots{font-size:15px;line-height:1;letter-spacing:1px}
+.ctrl-sum{font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctrlmenu[hidden]{display:none!important}
+.ctrlmenu{position:fixed;z-index:260;width:252px;max-width:calc(100vw - 16px);background:var(--panel);
+  border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:8px;max-height:calc(100vh - 24px);overflow-y:auto}
+.cm-head{display:flex;align-items:center;justify-content:space-between;padding:3px 6px 8px;border-bottom:1px solid var(--line-2);margin-bottom:4px}
+.cm-head b{font-size:13.5px}
+.cm-x{background:none;border:none;color:var(--ink-3);font-size:14px;cursor:pointer}
+.cm-sec{font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:8px 6px 4px}
+.cm-row{display:flex;align-items:center;gap:6px;padding:2px 4px}
+.cm-row .tog{flex:1 1 auto;justify-content:flex-start}
+.cm-row .mini{flex:0 0 auto}
 .tog{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;color:var(--ink-2);
   background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:5px 9px;transition:.12s}
 .tog .dot{width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
@@ -334,8 +349,8 @@ body.modon .tools .mo{display:inline-block}
 .ed-add:hover{border-color:var(--accent)}
 .ed-start{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff}
 
-/* 컨트롤 스트립 미니 셀렉트 */
-.ctrls .mini{font-family:inherit;font-size:11.5px;background:var(--panel-2);color:var(--ink-2);
+/* 미니 셀렉트 */
+.mini{font-family:inherit;font-size:11.5px;background:var(--panel-2);color:var(--ink-2);
   border:1px solid var(--line);border-radius:8px;padding:4px 6px}
 
 /* 자동완성(이모티콘/멘션) */
@@ -387,15 +402,8 @@ body.modon .tools .mo{display:inline-block}
     </div>
 
     <div class="ctrls">
-      <button class="tog" id="tCleanbot" aria-pressed="true" type="button"><span class="dot"></span>클린봇</button>
-      <select class="mini" id="cbLevel" title="클린봇 강도"><option value="low">약</option><option value="mid" selected>중</option><option value="high">강</option></select>
-      <button class="tog" id="tSlow" aria-pressed="false" type="button"><span class="dot"></span>저속모드</button>
-      <select class="mini" id="slowSec" title="저속모드 간격"><option value="5">5초</option><option value="10">10초</option><option value="30">30초</option><option value="60">60초</option></select>
-      <button class="tog" id="tFreeze" aria-pressed="false" type="button"><span class="dot"></span>채팅 얼리기</button>
-      <button class="tog danger" id="tMod" aria-pressed="false" type="button"><span class="dot"></span>매니저 모드</button>
-      <button class="tog" id="tJoin" aria-pressed="true" type="button"><span class="dot"></span>입장 표시</button>
-      <button class="tog" id="bBlockList" type="button"><span class="dot"></span>차단 목록</button>
-      <button class="tog" id="tSize" aria-pressed="false" type="button"><span class="dot"></span>글자 크게</button>
+      <button class="ctrl-open" id="ctrlBtn" type="button" aria-haspopup="true" aria-expanded="false"><span class="tdots">⋮</span> 운영·설정</button>
+      <span class="ctrl-sum mono" id="ctrlSum"></span>
     </div>
 
     <div class="notice" id="notice"></div>
@@ -489,6 +497,29 @@ body.modon .tools .mo{display:inline-block}
 <div class="modal" id="modal" hidden><div class="mback" id="mback"></div><div class="mpanel" id="mpanel"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="reactpop" id="reactPop" hidden></div>
+
+<div class="ctrlmenu" id="ctrlMenu" hidden role="menu" aria-label="운영·설정">
+  <div class="cm-head"><b>운영 · 설정</b><button class="cm-x" id="ctrlClose" type="button" aria-label="닫기">✕</button></div>
+  <div class="cm-sec">채팅 필터</div>
+  <div class="cm-row">
+    <button class="tog" id="tCleanbot" aria-pressed="true" type="button"><span class="dot"></span>클린봇</button>
+    <select class="mini" id="cbLevel" title="클린봇 강도"><option value="low">약</option><option value="mid" selected>중</option><option value="high">강</option></select>
+  </div>
+  <div class="cm-sec">전송 제한</div>
+  <div class="cm-row">
+    <button class="tog" id="tSlow" aria-pressed="false" type="button"><span class="dot"></span>저속모드</button>
+    <select class="mini" id="slowSec" title="저속모드 간격"><option value="5">5초</option><option value="10">10초</option><option value="30">30초</option><option value="60">60초</option></select>
+  </div>
+  <div class="cm-row"><button class="tog" id="tFreeze" aria-pressed="false" type="button"><span class="dot"></span>채팅 얼리기</button></div>
+  <div class="cm-sec">운영</div>
+  <div class="cm-row"><button class="tog danger" id="tMod" aria-pressed="false" type="button"><span class="dot"></span>매니저 모드</button></div>
+  <div class="cm-row"><button class="tog" id="bBlockList" type="button"><span class="dot"></span>차단 목록</button></div>
+  <div class="cm-sec">표시</div>
+  <div class="cm-row">
+    <button class="tog" id="tJoin" aria-pressed="true" type="button"><span class="dot"></span>입장 표시</button>
+    <button class="tog" id="tSize" aria-pressed="false" type="button"><span class="dot"></span>글자 크게</button>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -728,7 +759,12 @@ setInterval(function(){ bumpViewers(Math.random()<0.5?1:-1); },4000);
 /* ---------- input / gate / slow ---------- */
 var msgIn=document.getElementById('msgIn'), sendBtn=document.getElementById('sendBtn'),
     gate=document.getElementById('gate'), hint=document.getElementById('hint');
-function updHint(){ hint.textContent='클린봇 '+(S.cleanbot?('ON·'+{low:'약',mid:'중',high:'강'}[S.cbLevel]):'OFF')+' · 저속 '+(S.slow?S.slowSec+'초':'OFF'); }
+function updHint(){
+  var t='클린봇 '+(S.cleanbot?('ON·'+{low:'약',mid:'중',high:'강'}[S.cbLevel]):'OFF')+' · 저속 '+(S.slow?S.slowSec+'초':'OFF');
+  hint.textContent=t;
+  var cs=document.getElementById('ctrlSum');
+  if(cs){ var flags=[]; if(S.mod) flags.push('매니저'); if(S.freeze) flags.push('얼리기'); cs.textContent=t+(flags.length?' · '+flags.join('·'):''); }
+}
 function gateReason(){
   if(S.freeze && S.grade<3) return '❄️ 채팅이 얼려졌습니다. 구독팬 이상만 참여할 수 있어요. (내 등급을 올려보세요)';
   if(S.cool>0) return '⏳ 저속모드: '+S.cool+'초 후에 다시 보낼 수 있어요.';
@@ -773,8 +809,8 @@ function toggle(id,key,after){ var b=document.getElementById(id);
   b.addEventListener('click',function(){ S[key]=!S[key]; b.setAttribute('aria-pressed',S[key]); if(after)after(); }); }
 toggle('tCleanbot','cleanbot',updHint);
 toggle('tSlow','slow',function(){updHint();refreshGate();});
-toggle('tFreeze','freeze',function(){ refreshGate(); addSys(S.freeze?'❄️ 스트리머가 채팅을 얼렸습니다 (구독팬 이상 참여)':'☀️ 채팅 얼리기가 해제되었습니다'); });
-toggle('tMod','mod',function(){ document.body.classList.toggle('modon',S.mod); renderNotice(); addSys(S.mod?'🛡️ 매니저 모드 ON — 공지 등록·메시지 관리 가능':'매니저 모드 OFF'); });
+toggle('tFreeze','freeze',function(){ refreshGate(); updHint(); addSys(S.freeze?'❄️ 스트리머가 채팅을 얼렸습니다 (구독팬 이상 참여)':'☀️ 채팅 얼리기가 해제되었습니다'); });
+toggle('tMod','mod',function(){ document.body.classList.toggle('modon',S.mod); renderNotice(); updHint(); addSys(S.mod?'🛡️ 매니저 모드 ON — 공지 등록·메시지 관리 가능':'매니저 모드 OFF'); });
 toggle('tJoin','showJoin',applyJoin);
 document.getElementById('bBlockList').addEventListener('click',openBlockList);
 document.getElementById('tSize').addEventListener('click',function(){ S.big=!S.big; this.setAttribute('aria-pressed',S.big);
@@ -1102,6 +1138,23 @@ pollBox.addEventListener('click',function(e){
     if(poll.voted!==i){ if(poll.voted!=null) poll.opts[poll.voted].votes=Math.max(0,poll.opts[poll.voted].votes-1);
       poll.opts[i].votes++; poll.voted=i; renderPoll(); } }
 });
+
+/* ---------- 운영·설정 레이어 팝업 메뉴 ---------- */
+var ctrlBtn=document.getElementById('ctrlBtn'), ctrlMenu=document.getElementById('ctrlMenu'), ctrlSum=document.getElementById('ctrlSum');
+function openCtrlMenu(){
+  ctrlMenu.hidden=false;
+  var r=ctrlBtn.getBoundingClientRect(), w=ctrlMenu.offsetWidth||252, h=ctrlMenu.offsetHeight||320;
+  var left=Math.max(8, Math.min(r.left, innerWidth-w-8));
+  var top=r.bottom+6; if(top+h>innerHeight-8) top=Math.max(8, r.top-h-6);
+  ctrlMenu.style.left=left+'px'; ctrlMenu.style.top=top+'px';
+  ctrlBtn.setAttribute('aria-expanded','true');
+}
+function closeCtrlMenu(){ ctrlMenu.hidden=true; ctrlBtn.setAttribute('aria-expanded','false'); }
+ctrlBtn.addEventListener('click',function(e){ e.stopPropagation(); ctrlMenu.hidden?openCtrlMenu():closeCtrlMenu(); });
+document.getElementById('ctrlClose').addEventListener('click',closeCtrlMenu);
+document.addEventListener('mousedown',function(e){ if(!ctrlMenu.hidden && !ctrlMenu.contains(e.target) && !ctrlBtn.contains(e.target)) closeCtrlMenu(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape' && !ctrlMenu.hidden) closeCtrlMenu(); });
+document.getElementById('bBlockList').addEventListener('click',closeCtrlMenu);  // 목록 열면 메뉴 닫기
 
 /* ---------- boot ---------- */
 S.ch=CHANNELS[0].id;
