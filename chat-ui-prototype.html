@@ -107,6 +107,11 @@ button{font-family:inherit;cursor:pointer}
 .cm-row{display:flex;align-items:center;gap:6px;padding:2px 4px}
 .cm-row .tog{flex:1 1 auto;justify-content:flex-start}
 .cm-row .mini{flex:0 0 auto}
+.cm-note{font-size:9px;font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:5px;padding:1px 5px;margin-left:6px;font-family:"IBM Plex Mono",monospace}
+.mgr-hint{display:none;font-size:11px;color:var(--ink-3);background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:8px 10px;margin:8px 4px 2px}
+.mgr-hint b{color:var(--warn)}
+body.notmgr .mgr-only{display:none!important}
+body.notmgr .mgr-hint{display:block}
 .tog{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;color:var(--ink-2);
   background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:5px 9px;transition:.12s}
 .tog .dot{width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
@@ -503,22 +508,23 @@ body.modon .tools .mo{display:inline-block}
   <div class="cm-sec">채팅 필터</div>
   <div class="cm-row">
     <button class="tog" id="tCleanbot" aria-pressed="true" type="button"><span class="dot"></span>클린봇</button>
-    <select class="mini" id="cbLevel" title="클린봇 강도"><option value="low">약</option><option value="mid" selected>중</option><option value="high">강</option></select>
+    <select class="mini mgr-only" id="cbLevel" title="클린봇 강도(매니저)"><option value="low">약</option><option value="mid" selected>중</option><option value="high">강</option></select>
   </div>
-  <div class="cm-sec">전송 제한</div>
-  <div class="cm-row">
+  <div class="cm-sec mgr-only">전송 제한 <span class="cm-note">매니저</span></div>
+  <div class="cm-row mgr-only">
     <button class="tog" id="tSlow" aria-pressed="false" type="button"><span class="dot"></span>저속모드</button>
     <select class="mini" id="slowSec" title="저속모드 간격"><option value="5">5초</option><option value="10">10초</option><option value="30">30초</option><option value="60">60초</option></select>
   </div>
-  <div class="cm-row"><button class="tog" id="tFreeze" aria-pressed="false" type="button"><span class="dot"></span>채팅 얼리기</button></div>
-  <div class="cm-sec">운영</div>
-  <div class="cm-row"><button class="tog danger" id="tMod" aria-pressed="false" type="button"><span class="dot"></span>매니저 모드</button></div>
-  <div class="cm-row"><button class="tog" id="bBlockList" type="button"><span class="dot"></span>차단 목록</button></div>
+  <div class="cm-row mgr-only"><button class="tog" id="tFreeze" aria-pressed="false" type="button"><span class="dot"></span>채팅 얼리기</button></div>
+  <div class="cm-sec mgr-only">운영 <span class="cm-note">매니저</span></div>
+  <div class="cm-row mgr-only"><button class="tog danger" id="tMod" aria-pressed="false" type="button"><span class="dot"></span>매니저 모드</button></div>
   <div class="cm-sec">표시</div>
   <div class="cm-row">
     <button class="tog" id="tJoin" aria-pressed="true" type="button"><span class="dot"></span>입장 표시</button>
     <button class="tog" id="tSize" aria-pressed="false" type="button"><span class="dot"></span>글자 크게</button>
   </div>
+  <div class="cm-row"><button class="tog" id="bBlockList" type="button"><span class="dot"></span>차단 목록</button></div>
+  <div class="cm-note-row mgr-hint" id="mgrHint">운영 설정은 <b>매니저</b> 등급에서 노출됩니다. (하단 “내 등급”에서 변경)</div>
 </div>
 
 <script>
@@ -796,7 +802,15 @@ msgIn.addEventListener('keydown',function(e){
   if(e.key==='Enter') send();
 });
 document.addEventListener('keydown',function(e){ if(e.key==='c'&&document.activeElement!==msgIn&&!/input|select/i.test(document.activeElement.tagName)){ e.preventDefault(); msgIn.focus(); }});
-document.getElementById('grade').addEventListener('change',function(e){ S.grade=parseInt(e.target.value); refreshGate(); });
+document.getElementById('grade').addEventListener('change',function(e){ S.grade=parseInt(e.target.value); applyGradePerm(); refreshGate(); });
+function applyGradePerm(){   // 내 등급 권한에 따라 운영 메뉴 노출
+  var isMgr = S.grade>=9;
+  document.body.classList.toggle('notmgr', !isMgr);
+  if(!isMgr && S.mod){   // 매니저 아니면 매니저 모드 강제 해제
+    S.mod=false; document.getElementById('tMod').setAttribute('aria-pressed','false');
+    document.body.classList.remove('modon'); renderNotice(); updHint();
+  }
+}
 document.getElementById('cbLevel').addEventListener('change',function(e){ S.cbLevel=e.target.value; updHint(); });
 document.getElementById('slowSec').addEventListener('change',function(e){ S.slowSec=parseInt(e.target.value); updHint(); });
 
@@ -1163,5 +1177,5 @@ document.getElementById('chSub').textContent=CHANNELS[0].sub;
 document.getElementById('viewers').textContent=CHANNELS[0].viewers.toLocaleString();
 noticeText=CHANNELS[0].notice;
 renderTabs(); seedChannel(CHANNELS[0]);
-renderNotice(); updHint(); refreshGate(); scrollEnd(); simTick();
+applyGradePerm(); renderNotice(); updHint(); refreshGate(); scrollEnd(); simTick();
 </script>
