@@ -333,6 +333,38 @@ body.modon .tools .mo{display:inline-block}
 .ed-add{margin-top:9px;width:100%;border:1px dashed var(--line);background:none;color:var(--accent);border-radius:9px;padding:8px;font-weight:600;font-size:12.5px;cursor:pointer}
 .ed-add:hover{border-color:var(--accent)}
 .ed-start{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff}
+
+/* 컨트롤 스트립 미니 셀렉트 */
+.ctrls .mini{font-family:inherit;font-size:11.5px;background:var(--panel-2);color:var(--ink-2);
+  border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+
+/* 자동완성(이모티콘/멘션) */
+.acbox[hidden]{display:none!important}
+.acbox{display:none;flex-direction:column;gap:2px;max-height:190px;overflow-y:auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px;box-shadow:var(--shadow)}
+.acbox.show{display:flex}
+.ac-item{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:7px;cursor:pointer;font-size:13px}
+.ac-item.on{background:var(--accent-soft)}
+.ac-item .ac-emo{width:24px;height:24px;object-fit:contain;flex:0 0 auto}
+.ac-item .ac-at{color:var(--accent);font-weight:700}
+.ac-item .ac-nk{color:var(--ink);font-weight:600}
+.ac-item .ac-code{color:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-size:11.5px}
+
+/* 멘션 하이라이트 */
+.men{color:var(--accent);font-weight:600}
+.msg.mentioned{background:color-mix(in srgb,var(--accent) 13%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
+
+/* 메시지 리액션 */
+.reacts{display:flex;flex-wrap:wrap;gap:4px;margin:5px 0 1px 2px}
+.rchip{font-size:11px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);
+  border-radius:20px;padding:1px 8px;cursor:pointer;line-height:1.7}
+.rchip:hover{border-color:var(--accent)}
+.rchip.mine{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink)}
+.reactpop[hidden]{display:none!important}
+.reactpop{position:fixed;z-index:250;display:flex;gap:2px;background:var(--panel);border:1px solid var(--line);
+  border-radius:22px;padding:4px 6px;box-shadow:var(--shadow-lg)}
+.reactpop button{font-size:18px;background:none;border:none;cursor:pointer;padding:3px;border-radius:50%;line-height:1}
+.reactpop button:hover{background:var(--panel-2)}
 </style>
 
 <div class="wrap">
@@ -356,7 +388,9 @@ body.modon .tools .mo{display:inline-block}
 
     <div class="ctrls">
       <button class="tog" id="tCleanbot" aria-pressed="true" type="button"><span class="dot"></span>클린봇</button>
+      <select class="mini" id="cbLevel" title="클린봇 강도"><option value="low">약</option><option value="mid" selected>중</option><option value="high">강</option></select>
       <button class="tog" id="tSlow" aria-pressed="false" type="button"><span class="dot"></span>저속모드</button>
+      <select class="mini" id="slowSec" title="저속모드 간격"><option value="5">5초</option><option value="10">10초</option><option value="30">30초</option><option value="60">60초</option></select>
       <button class="tog" id="tFreeze" aria-pressed="false" type="button"><span class="dot"></span>채팅 얼리기</button>
       <button class="tog danger" id="tMod" aria-pressed="false" type="button"><span class="dot"></span>매니저 모드</button>
       <button class="tog" id="tJoin" aria-pressed="true" type="button"><span class="dot"></span>입장 표시</button>
@@ -378,6 +412,7 @@ body.modon .tools .mo{display:inline-block}
 
     <div class="input">
       <div class="gate" id="gate"></div>
+      <div class="acbox" id="acbox" hidden></div>
       <div class="emorow" id="emorow"></div>
       <div class="ibox">
         <button class="ib" id="emoBtn" type="button" aria-label="이모티콘">😀</button>
@@ -429,7 +464,8 @@ body.modon .tools .mo{display:inline-block}
         <div class="m"><span class="k">INT</span><span><b>참여형</b> 실시간 투표 · 승부예측(응원팀 선택) — 진행률 바·집계·결과 발표</span></div>
         <div class="m"><span class="k">CASH</span><span><b>후원</b> 캐시 후원(원 단위) — 금액대별 색상 카드(1천/5천/1만/5만원+)</span></div>
         <div class="m"><span class="k">MOD</span><span><b>모더레이션</b> 공지 등록/고정, 유저 프로필 카드(닉 클릭)·신고·차단/해제(차단 목록), 삭제/타임아웃, 얼리기, 등급 게이트</span></div>
-        <div class="m"><span class="k">SET</span><span><b>설정</b> 클린봇 on/off, 저속모드, 입장 표시 on/off, 글자 크기, 테마</span></div>
+        <div class="m"><span class="k">SET</span><span><b>설정</b> 클린봇 on/off·강도(약/중/강), 저속모드 간격(5~60초), 입장 표시, 글자 크기, 테마</span></div>
+        <div class="m"><span class="k">CHAT</span><span><b>입력</b> 이모티콘(:) · 멘션(@) 자동완성, 메시지 이모지 리액션</span></div>
         <div class="m"><span class="k">BOT</span><span><b>클린봇</b> 정규화·자모 사전 매칭 + 도배/광고 탐지 → 블라인드(개인 보기)</span></div>
       </div>
       <p style="margin-top:11px">근거 문서: chzzk-chat-spec · sooplive-chat-spec · chat-service-roadmap</p>
@@ -452,11 +488,12 @@ body.modon .tools .mo{display:inline-block}
 
 <div class="modal" id="modal" hidden><div class="mback" id="mback"></div><div class="mpanel" id="mpanel"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="reactpop" id="reactPop" hidden></div>
 
 <script>
 "use strict";
 /* ---------- state ---------- */
-var S = { cleanbot:true, slow:false, freeze:false, mod:false, big:false, cool:0, atBottom:true, grade:1, showJoin:true };
+var S = { cleanbot:true, cbLevel:'mid', slow:false, slowSec:5, freeze:false, mod:false, big:false, cool:0, atBottom:true, grade:1, showJoin:true };
 var recent = {}; // userId -> [{t, norm}]
 var userReg = {}; // uid -> {nick,color,badge} (프로필 카드용)
 var list = document.getElementById('list');
@@ -506,10 +543,9 @@ function spamScore(uid, raw){
 }
 function judge(uid, raw){
   if(!S.cleanbot) return {act:'pass'};
-  var s = dictScore(raw) + spamScore(uid, raw);
-  if(s>=100) return {act:'blind', why:'욕설/비속어'};
-  if(s>=70)  return {act:'blind', why:'도배·스팸'};
-  if(s>=40)  return {act:'blind', why:'광고/의심'};
+  var d=dictScore(raw), sp=spamScore(uid, raw), s=d+sp;
+  var th={low:100, mid:60, high:35}[S.cbLevel||'mid'];   // 강도↑ = 임계값↓ (더 공격적)
+  if(s>=th) return {act:'blind', why: d>=100?'욕설/비속어':(sp>=50?'도배·스팸':'부적절·의심')};
   return {act:'pass'};
 }
 
@@ -523,6 +559,7 @@ alias('불',17); alias('웃음',4); alias('킹받',20); alias('눈물',7);
 function renderText(t){
   t=esc(t);
   for(var k in EMO){ if(t.indexOf(k)>=0) t=t.split(k).join('<img class="emo" src="'+EMO[k]+'" alt="'+k+'" loading="lazy">'); }
+  t=t.replace(/@([^\s@:<]{1,16})/g,'<span class="men">@$1</span>');   // 멘션 하이라이트
   return t;
 }
 function nearBottom(){ return list.scrollHeight - list.scrollTop - list.clientHeight < 60; }
@@ -542,6 +579,7 @@ function addMsg(m){ // {uid,nick,color,badge:[{c,l}],text,mine}
   userReg[m.uid]={nick:m.nick,color:m.color,badge:m.badge||[]};
   var el=document.createElement('div');
   el.className='msg'+(m.mine?' mine':'')+(v.act==='blind'?' blinded':'');
+  if(!m.mine && /(^|\s)@나(\s|$)/.test(m.text)) el.className+=' mentioned';   // 내가 멘션됨
   var bdg=(m.badge||[]).map(function(b){return '<span class="bdg '+b.c+'">'+b.l+'</span>';}).join('');
   el.innerHTML = bdg
     + '<span class="nk" role="button" tabindex="0" data-uid="'+esc(m.uid)+'" style="color:'+(m.color||'var(--ink)')+'">'+esc(m.nick)+'</span> '
@@ -549,6 +587,7 @@ function addMsg(m){ // {uid,nick,color,badge:[{c,l}],text,mine}
     + '<span class="blindnote">클린봇이 가린 메시지 ('+(v.why||'')+')</span>'
     + '<button class="reveal" type="button">보기</button>'
     + '<span class="tools">'
+    +   '<button class="rp" data-a="react" type="button" title="반응">😊</button>'
     +   '<button class="rp" data-a="report" type="button" title="신고">🚩</button>'
     +   '<button class="mo" data-a="pin" type="button">공지</button>'
     +   '<button class="mo" data-a="del" type="button">삭제</button>'
@@ -561,6 +600,7 @@ function addMsg(m){ // {uid,nick,color,badge:[{c,l}],text,mine}
     else if(a==='to'){ el.classList.add('gone'); addSys('⛔ '+m.nick+' 님이 타임아웃되었습니다 (60초)'); }
     else if(a==='pin'){ noticeText=m.nick+': '+m.text; renderNotice(); addSys('📌 채팅이 공지로 등록되었습니다'); }
     else if(a==='report'){ openReport('메시지: “'+m.text.slice(0,24)+(m.text.length>24?'…':'')+'”', m.nick); }
+    else if(a==='react'){ var rc=e.target.getBoundingClientRect(); openReactPop(el, rc.left, rc.top); }
   });
   if(blocked[m.uid] && !m.mine){ el.classList.add('uhide'); list.appendChild(el); trim(); return; }
   list.appendChild(el); trim();
@@ -688,7 +728,7 @@ setInterval(function(){ bumpViewers(Math.random()<0.5?1:-1); },4000);
 /* ---------- input / gate / slow ---------- */
 var msgIn=document.getElementById('msgIn'), sendBtn=document.getElementById('sendBtn'),
     gate=document.getElementById('gate'), hint=document.getElementById('hint');
-function updHint(){ hint.textContent='클린봇 '+(S.cleanbot?'ON':'OFF')+' · 저속 '+(S.slow?'ON':'OFF'); }
+function updHint(){ hint.textContent='클린봇 '+(S.cleanbot?('ON·'+{low:'약',mid:'중',high:'강'}[S.cbLevel]):'OFF')+' · 저속 '+(S.slow?S.slowSec+'초':'OFF'); }
 function gateReason(){
   if(S.freeze && S.grade<3) return '❄️ 채팅이 얼려졌습니다. 구독팬 이상만 참여할 수 있어요. (내 등급을 올려보세요)';
   if(S.cool>0) return '⏳ 저속모드: '+S.cool+'초 후에 다시 보낼 수 있어요.';
@@ -706,12 +746,23 @@ function send(){
   var badge = S.grade>=9?[{c:'mgr',l:'매니저'}] : S.grade>=3?[{c:'sub',l:'3'}] : S.grade>=2?[{c:'fan',l:'팔로워'}]:[];
   addMsg({uid:'me',nick:'나',color:'var(--accent-2)',badge:badge,text:t,mine:true});
   msgIn.value='';
-  if(S.slow && S.grade<9){ S.cool=5; refreshGate(); var iv=setInterval(function(){ S.cool--; refreshGate(); if(S.cool<=0) clearInterval(iv); },1000); }
+  if(S.slow && S.grade<9){ S.cool=S.slowSec; refreshGate(); var iv=setInterval(function(){ S.cool--; refreshGate(); if(S.cool<=0) clearInterval(iv); },1000); }
 }
 sendBtn.addEventListener('click',send);
-msgIn.addEventListener('keydown',function(e){ if(e.key==='Enter') send(); });
+msgIn.addEventListener('input', acUpdate);
+msgIn.addEventListener('keydown',function(e){
+  if(!acbox.hidden && acItems.length){
+    if(e.key==='ArrowDown'){ e.preventDefault(); acIndex=(acIndex+1)%acItems.length; acRender(); return; }
+    if(e.key==='ArrowUp'){ e.preventDefault(); acIndex=(acIndex-1+acItems.length)%acItems.length; acRender(); return; }
+    if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); acAccept(acIndex); return; }
+    if(e.key==='Escape'){ acClose(); return; }
+  }
+  if(e.key==='Enter') send();
+});
 document.addEventListener('keydown',function(e){ if(e.key==='c'&&document.activeElement!==msgIn&&!/input|select/i.test(document.activeElement.tagName)){ e.preventDefault(); msgIn.focus(); }});
 document.getElementById('grade').addEventListener('change',function(e){ S.grade=parseInt(e.target.value); refreshGate(); });
+document.getElementById('cbLevel').addEventListener('change',function(e){ S.cbLevel=e.target.value; updHint(); });
+document.getElementById('slowSec').addEventListener('change',function(e){ S.slowSec=parseInt(e.target.value); updHint(); });
 
 /* scroll anchor */
 list.addEventListener('scroll',function(){ if(nearBottom()){ anchor.classList.remove('show'); S.atBottom=true; } });
@@ -769,6 +820,71 @@ STICKERS.forEach(function(s){ var b=document.createElement('button'); b.type='bu
   var im=document.createElement('img'); im.src=s.s; im.alt=s.c; b.appendChild(im);
   b.addEventListener('click',function(){ msgIn.value+=':'+s.c+':'; msgIn.focus(); }); emorow.appendChild(b); });
 document.getElementById('emoBtn').addEventListener('click',function(){ emorow.classList.toggle('show'); });
+
+/* ---------- 자동완성: 이모티콘(:) / 멘션(@) ---------- */
+var acbox=document.getElementById('acbox'), acItems=[], acIndex=0, acMode=null, acStart=0;
+function mentionCandidates(){
+  var set={}, arr=[];
+  ch().users.forEach(function(u){ if(!set[u.nick]){set[u.nick]=1;arr.push(u.nick);} });
+  Object.keys(userReg).forEach(function(k){ var n=userReg[k].nick; if(n&&n!=='나'&&!set[n]){set[n]=1;arr.push(n);} });
+  return arr;
+}
+function acUpdate(){
+  var v=msgIn.value, pos=msgIn.selectionStart, left=v.slice(0,pos);
+  var m=left.match(/(^|\s)([:@][^\s:@]*)$/);
+  if(!m){ acClose(); return; }
+  var token=m[2]; acStart=pos-token.length; var q=token.slice(1).toLowerCase();
+  if(token[0]===':'){ acMode='emo';
+    acItems=STICKERS.filter(function(s){return s.c.toLowerCase().indexOf(q)>=0;}).slice(0,10);
+  } else { acMode='men';
+    acItems=mentionCandidates().filter(function(n){return n.toLowerCase().indexOf(q)>=0;}).slice(0,10).map(function(n){return {c:n};});
+  }
+  if(!acItems.length){ acClose(); return; }
+  acIndex=0; acRender();
+}
+function acRender(){
+  acbox.innerHTML=acItems.map(function(it,i){
+    var inner = acMode==='emo'
+      ? '<img class="ac-emo" src="'+it.s+'"><span class="ac-code">:'+esc(it.c)+':</span>'
+      : '<span class="ac-at">@</span><span class="ac-nk">'+esc(it.c)+'</span>';
+    return '<div class="ac-item'+(i===acIndex?' on':'')+'" data-i="'+i+'">'+inner+'</div>';
+  }).join('');
+  acbox.hidden=false; acbox.classList.add('show');
+}
+function acClose(){ acbox.classList.remove('show'); acbox.hidden=true; acItems=[]; acMode=null; }
+function acAccept(i){
+  var it=acItems[i]; if(!it) return;
+  var v=msgIn.value, pos=msgIn.selectionStart;
+  var insert = acMode==='emo' ? ':'+it.c+':' : '@'+it.c+' ';
+  msgIn.value=v.slice(0,acStart)+insert+v.slice(pos);
+  var np=acStart+insert.length; try{ msgIn.setSelectionRange(np,np); }catch(e){}
+  acClose(); msgIn.focus();
+}
+acbox.addEventListener('mousedown',function(e){ var it=e.target.closest('.ac-item'); if(it){ e.preventDefault(); acAccept(parseInt(it.getAttribute('data-i'))); } });
+
+/* ---------- 메시지 리액션 ---------- */
+var REACTS=['👍','❤️','😂','😮','😢','🔥'], reactPop=document.getElementById('reactPop'), reactTarget=null;
+reactPop.innerHTML=REACTS.map(function(e){return '<button data-e="'+e+'" type="button">'+e+'</button>';}).join('');
+function openReactPop(el,x,y){ reactTarget=el;
+  reactPop.hidden=false;
+  var w=reactPop.offsetWidth||190;
+  reactPop.style.left=Math.max(8,Math.min(x-w/2, innerWidth-w-8))+'px';
+  reactPop.style.top=Math.max(8,y-46)+'px';
+}
+function addReaction(el,emo){ if(!el) return;
+  el._r=el._r||{}; el._mine=el._mine||{};
+  if(el._mine[emo]){ el._r[emo]--; el._mine[emo]=false; if(el._r[emo]<=0) delete el._r[emo]; }
+  else { el._r[emo]=(el._r[emo]||0)+1; el._mine[emo]=true; }
+  renderReacts(el);
+}
+function renderReacts(el){
+  var box=el.querySelector('.reacts'), keys=Object.keys(el._r||{});
+  if(!keys.length){ if(box) box.remove(); return; }
+  if(!box){ box=document.createElement('div'); box.className='reacts'; el.appendChild(box); }
+  box.innerHTML=keys.map(function(e){ return '<button class="rchip'+(el._mine&&el._mine[e]?' mine':'')+'" data-e="'+e+'">'+e+' '+el._r[e]+'</button>'; }).join('');
+}
+reactPop.addEventListener('click',function(ev){ var b=ev.target.closest('button'); if(b){ addReaction(reactTarget,b.getAttribute('data-e')); reactPop.hidden=true; } });
+document.addEventListener('mousedown',function(ev){ if(!reactPop.hidden && !reactPop.contains(ev.target) && !ev.target.closest('[data-a="react"]')) reactPop.hidden=true; });
 
 /* ---------- 캐시 후원 (입력창 버튼, 원 단위) ---------- */
 var cashAmts=[1000,5000,10000,50000], cashIdx=0;
@@ -898,7 +1014,10 @@ mpanel.addEventListener('click',function(e){
 });
 document.getElementById('mback').addEventListener('click',closeModal);
 document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!modal.hidden) closeModal(); });
-list.addEventListener('click',function(e){ var nk=e.target.closest('.nk'); if(nk&&nk.dataset.uid) openProfile(nk.dataset.uid); });
+list.addEventListener('click',function(e){
+  var chip=e.target.closest('.rchip'); if(chip){ addReaction(chip.closest('.msg'), chip.getAttribute('data-e')); return; }
+  var nk=e.target.closest('.nk'); if(nk&&nk.dataset.uid) openProfile(nk.dataset.uid);
+});
 list.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ')){ var nk=e.target.closest('.nk'); if(nk&&nk.dataset.uid){ e.preventDefault(); openProfile(nk.dataset.uid); } } });
 
 /* ---------- 참여형: 투표 · 승부예측 ---------- */
