@@ -1174,7 +1174,7 @@ pollBox.addEventListener('click',function(e){
   if(a==='expand'){ if(poll){ poll.collapsed=false; renderPoll(); } return; }
   if(a==='collapse'){ if(poll){ poll.collapsed=true; renderPoll(); } return; }
   if(a==='endask'){ if(S.mod && poll){ poll.ending=true; renderPoll(); } return; }   // 종료: 매니저만
-  if(a==='pin'){ if(S.mod && poll){ poll.open=false; poll.ending=false; poll.collapsed=false; clearInterval(pollTimer);
+  if(a==='pin'){ if(S.mod && poll){ poll.open=false; poll.ending=false; poll.collapsed=true; clearInterval(pollTimer);
       var mx=Math.max.apply(null,poll.opts.map(function(o){return o.votes;}));
       var w=poll.opts.filter(function(o){return o.votes===mx;})[0];
       renderPoll(); addSys('🏁 '+(poll.type==='vote'?'투표':'예측')+' 종료 · 결과: '+w.label+' (상단 고정)'); } return; }
