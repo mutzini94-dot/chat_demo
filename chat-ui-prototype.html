@@ -326,7 +326,18 @@ body.modon .tools .mo{display:inline-block}
 .poll-h{display:flex;align-items:center;gap:8px;font-size:11px}
 .poll-k{font-weight:700;color:var(--accent-ink)}
 .poll-st{font-family:"IBM Plex Mono",monospace;color:var(--ink-3)}
-.poll-x{margin-left:auto;background:none;border:none;color:var(--ink-3);font-size:13px;cursor:pointer}
+.poll-fold{margin-left:auto;background:none;border:none;color:var(--ink-3);font-size:13px;cursor:pointer;line-height:1;padding:0 2px}
+.poll-fold:hover{color:var(--accent)}
+.poll-x{margin-left:4px;background:none;border:none;color:var(--ink-3);font-size:13px;cursor:pointer}
+.poll-x:hover{color:var(--crit)}
+.poll.collapsed{padding:0}
+.poll-min{width:100%;display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;padding:9px 14px;font-size:12.5px;text-align:left;color:var(--ink)}
+.poll-min:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.poll-minttl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.poll-minr{flex:0 0 auto;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--accent-ink)}
+.poll-endopts{display:flex;gap:6px;margin-left:auto}
+.poll-pin{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer}
+.poll-del{background:var(--crit);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer}
 .poll-t{font-size:13.5px;font-weight:600;margin:6px 0 9px}
 .poll-opts{display:flex;flex-direction:column;gap:6px}
 .poll-opt{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -804,6 +815,7 @@ function applyGradePerm(){   // 내 등급 권한에 따라 운영 메뉴 노출
     S.mod=false; document.getElementById('tMod').setAttribute('aria-pressed','false');
     document.body.classList.remove('modon'); renderNotice(); updHint();
   }
+  if(typeof renderPoll==='function') renderPoll();   // 권한 변경 시 투표 종료 버튼 노출 갱신
 }
 document.getElementById('cbLevel').addEventListener('change',function(e){ S.cbLevel=e.target.value; updHint(); });
 document.getElementById('slowSec').addEventListener('change',function(e){ S.slowSec=parseInt(e.target.value); updHint(); });
@@ -818,7 +830,7 @@ function toggle(id,key,after){ var b=document.getElementById(id);
 toggle('tCleanbot','cleanbot',updHint);
 toggle('tSlow','slow',function(){updHint();refreshGate();});
 toggle('tFreeze','freeze',function(){ refreshGate(); updHint(); addSys(S.freeze?'❄️ 스트리머가 채팅을 얼렸습니다 (구독팬 이상 참여)':'☀️ 채팅 얼리기가 해제되었습니다'); });
-toggle('tMod','mod',function(){ document.body.classList.toggle('modon',S.mod); renderNotice(); updHint(); addSys(S.mod?'🛡️ 매니저 모드 ON — 공지 등록·메시지 관리 가능':'매니저 모드 OFF'); });
+toggle('tMod','mod',function(){ document.body.classList.toggle('modon',S.mod); renderNotice(); updHint(); if(typeof renderPoll==='function') renderPoll(); addSys(S.mod?'🛡️ 매니저 모드 ON — 공지 등록·메시지 관리 가능':'매니저 모드 OFF'); });
 toggle('tJoin','showJoin',applyJoin);
 document.getElementById('bBlockList').addEventListener('click',openBlockList);
 document.getElementById('tSize').addEventListener('click',function(){ S.big=!S.big; this.setAttribute('aria-pressed',S.big);
@@ -1106,7 +1118,7 @@ function renderPollEditor(){
   if(f) setTimeout(function(){ try{ f.focus(); }catch(e){} },0); edFocus=-1;
 }
 function launchPoll(type,title,opts){
-  poll={type:type,title:title,opts:opts.map(function(l){return {label:l,votes:Math.floor(Math.random()*6)};}),voted:null,open:true};
+  poll={type:type,title:title,opts:opts.map(function(l){return {label:l,votes:Math.floor(Math.random()*6)};}),voted:null,open:true,collapsed:false,ending:false};
   renderPoll();
   addSys((type==='vote'?'🗳️ 투표':'⚔️ 승부예측')+'가 시작되었습니다 · '+poll.title);
   clearInterval(pollTimer);
@@ -1114,37 +1126,66 @@ function launchPoll(type,title,opts){
     poll.opts[Math.floor(Math.random()*poll.opts.length)].votes+=Math.floor(Math.random()*3)+1; renderPoll(); },1500);
 }
 function renderPoll(){
-  if(!poll){ pollBox.hidden=true; pollBox.innerHTML=''; return; }
+  if(!poll){ pollBox.hidden=true; pollBox.innerHTML=''; pollBox.className='poll'; return; }
+  pollBox.hidden=false;
+  var isPred=poll.type==='pred', klabel=isPred?'⚔️ 승부예측':'🗳️ 투표';
   var total=poll.opts.reduce(function(a,o){return a+o.votes;},0)||1;
-  var isPred=poll.type==='pred', maxv=Math.max.apply(null,poll.opts.map(function(o){return o.votes;}));
+  var maxv=Math.max.apply(null,poll.opts.map(function(o){return o.votes;}));
+  if(poll.collapsed){   // 공지 크기로 접힌 상태
+    pollBox.className='poll collapsed';
+    pollBox.innerHTML='<button class="poll-min" data-a="expand" type="button">'
+      +'<span class="poll-k">'+klabel+(poll.open?'':' · 결과')+'</span>'
+      +'<span class="poll-minttl">'+esc(poll.title)+'</span>'
+      +'<span class="poll-minr">'+(poll.open?(poll.voted!=null?'참여 완료':'참여하기'):'결과 보기')+' ▾</span></button>';
+    return;
+  }
+  pollBox.className='poll';
   var opts=poll.opts.map(function(o,i){
     var pct=Math.round(o.votes/total*100), win=(!poll.open&&o.votes===maxv);
-    return '<button class="poll-opt'+(poll.voted===i?' mine':'')+(win?' win':'')+'" data-i="'+i+'"'+(poll.open?'':' disabled')+'>'
+    return '<button class="poll-opt'+(poll.voted===i?' mine':'')+(win?' win':'')+'" data-i="'+i+'"'+(poll.open&&!poll.ending?'':' disabled')+' type="button">'
       +'<span class="poll-bar" style="width:'+pct+'%"></span>'
       +'<span class="poll-lb">'+esc(o.label)+(poll.voted===i?' ✓':'')+(win?' 🏆':'')+'</span>'
       +'<span class="poll-pc">'+pct+'% · '+o.votes+'표</span></button>';
   }).join('');
+  var foot;
+  if(poll.open && poll.ending){
+    foot='<span>결과를 어떻게 할까요?</span><span class="poll-endopts">'
+      +'<button class="poll-pin" data-a="pin" type="button">📌 상단 고정</button>'
+      +'<button class="poll-del" data-a="del" type="button">🗑 삭제</button></span>';
+  } else if(poll.open){
+    foot='<span>'+(poll.voted!=null?'참여 완료 · 다른 항목을 눌러 변경':(isPred?'응원할 쪽을 선택하세요':'항목을 선택해 참여'))+'</span>'
+      +(S.mod?'<button class="poll-end" data-a="endask" type="button">종료</button>':'');
+  } else {
+    foot='<span>📌 결과 상단 고정됨</span>'
+      +(S.mod?'<button class="poll-del" data-a="del" type="button">삭제</button>':'');
+  }
   pollBox.innerHTML=
-    '<div class="poll-h"><span class="poll-k">'+(isPred?'⚔️ 승부예측':'🗳️ 투표')+'</span>'
-    +'<span class="poll-st">'+(poll.open?'진행중':'종료')+' · 총 '+total+'표</span>'
-    +'<button class="poll-x" data-a="closebox" type="button" title="닫기">✕</button></div>'
+    '<div class="poll-h"><span class="poll-k">'+klabel+'</span>'
+    +'<span class="poll-st">'+(poll.open?(poll.ending?'종료 확인':'진행중'):'종료')+' · 총 '+total+'표</span>'
+    +'<button class="poll-fold" data-a="collapse" type="button" title="접기">▴</button>'
+    +(S.mod?'<button class="poll-x" data-a="del" type="button" title="삭제">✕</button>':'')
+    +'</div>'
     +'<div class="poll-t">'+esc(poll.title)+'</div>'
     +'<div class="poll-opts">'+opts+'</div>'
-    +'<div class="poll-foot"><span>'+(poll.open?(poll.voted!=null?'참여 완료 · 다른 항목을 눌러 변경':(isPred?'응원할 쪽을 선택하세요':'항목을 선택해 참여')):'결과가 발표되었습니다')+'</span>'
-    +(poll.open?'<button class="poll-end" data-a="end" type="button">종료·결과</button>':'')+'</div>';
-  pollBox.hidden=false;
+    +'<div class="poll-foot">'+foot+'</div>';
 }
 pollBox.addEventListener('click',function(e){
   var da=e.target.closest('[data-a]'), a=da?da.getAttribute('data-a'):null;
-  if(a==='closebox'){ poll=null; clearInterval(pollTimer); renderPoll(); return; }
-  if(a==='end'){ if(poll){ poll.open=false; clearInterval(pollTimer); renderPoll();
-    var mx=Math.max.apply(null,poll.opts.map(function(o){return o.votes;}));
-    var w=poll.opts.filter(function(o){return o.votes===mx;})[0];
-    addSys('🏁 '+(poll.type==='vote'?'투표':'예측')+' 종료 · 결과: '+w.label); } return; }
+  if(a==='expand'){ if(poll){ poll.collapsed=false; renderPoll(); } return; }
+  if(a==='collapse'){ if(poll){ poll.collapsed=true; renderPoll(); } return; }
+  if(a==='endask'){ if(S.mod && poll){ poll.ending=true; renderPoll(); } return; }   // 종료: 매니저만
+  if(a==='pin'){ if(S.mod && poll){ poll.open=false; poll.ending=false; poll.collapsed=false; clearInterval(pollTimer);
+      var mx=Math.max.apply(null,poll.opts.map(function(o){return o.votes;}));
+      var w=poll.opts.filter(function(o){return o.votes===mx;})[0];
+      renderPoll(); addSys('🏁 '+(poll.type==='vote'?'투표':'예측')+' 종료 · 결과: '+w.label+' (상단 고정)'); } return; }
+  if(a==='del'){ if(S.mod){ poll=null; clearInterval(pollTimer); renderPoll(); addSys('투표가 삭제되었습니다'); } return; }
   var opt=e.target.closest('.poll-opt');
-  if(opt&&poll&&poll.open){ var i=parseInt(opt.getAttribute('data-i'));
-    if(poll.voted!==i){ if(poll.voted!=null) poll.opts[poll.voted].votes=Math.max(0,poll.opts[poll.voted].votes-1);
-      poll.opts[i].votes++; poll.voted=i; renderPoll(); } }
+  if(opt && poll && poll.open && !poll.ending){
+    var i=parseInt(opt.getAttribute('data-i'));
+    if(poll.voted!==i){ if(poll.voted!=null) poll.opts[poll.voted].votes=Math.max(0,poll.opts[poll.voted].votes-1); poll.opts[i].votes++; poll.voted=i; }
+    if(!S.mod) poll.collapsed=true;   // 일반: 참여하면 공지 크기로 접힘
+    renderPoll();
+  }
 });
 
 /* ---------- 운영·설정 레이어 팝업 메뉴 ---------- */
