@@ -577,13 +577,14 @@ function dictScore(raw){
   for(var k=0;k<banJamo.length;k++){ if(banJamo[k].length>=2 && j.indexOf(banJamo[k])>=0) return 100; }
   return 0;
 }
+var AD_RE=/(https?:\/\/|www\.|\.(com|net|kr|shop|link)\b|카톡|카카오|오픈톡|텔레|디스코드|010[-\s]?\d{3,4}|\d{2,4}[-\s]?\d{3,4}[-\s]?\d{3,4}|수익보장|고수익|조건만남|후불|입금)/i;
 function spamScore(uid, raw){
   var now=Date.now(), n=normalize(raw), h=recent[uid]||[], sc=0;
   h=h.filter(function(x){return now-x.t<8000;});
   var dup=h.filter(function(x){return x.norm===n;}).length;
   if(dup>=2) sc+=60;
   if(h.length>=4 && now-h[0].t<3000) sc+=50;
-  if(/(https?:\/\/|www\.|카톡|텔레|010[-\s]?\d{3,4})/i.test(raw)) sc+=40;
+  if(AD_RE.test(raw)) sc+=40;
   if(raw.length>8){ var uniq=(new Set(n.split(''))).size/Math.max(n.length,1); if(uniq<0.2) sc+=40; }
   h.push({t:now,norm:n}); recent[uid]=h.slice(-8);
   return sc;
@@ -591,6 +592,7 @@ function spamScore(uid, raw){
 function judge(uid, raw){
   if(!S.cleanbot) return {act:'pass'};
   var d=dictScore(raw), sp=spamScore(uid, raw), s=d+sp;
+  if(AD_RE.test(raw)) return {act:'blind', why:'광고/연락처'};   // 광고·연락처는 강도와 무관하게 항상 숨김
   var th={low:100, mid:60, high:35}[S.cbLevel||'mid'];   // 강도↑ = 임계값↓ (더 공격적)
   if(s>=th) return {act:'blind', why: d>=100?'욕설/비속어':(sp>=50?'도배·스팸':'부적절·의심')};
   return {act:'pass'};
